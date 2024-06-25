@@ -1,0 +1,10 @@
+pyrogram
+tgcrypto
+aiohttp
+mutagen
+python-dotenv
+Pillow
+psycopg2-binary
+pathvalidate
+pycryptodomex
+psutil

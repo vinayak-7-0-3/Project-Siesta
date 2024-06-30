@@ -15,14 +15,4 @@ class CMD(object):
     BAN = ["ban", f"ban@{bot}"]
     AUTH = ["auth", f"auth@{bot}"]
 
-aio = Client(
-    "Project-Siesta",
-    api_id=Config.APP_ID,
-    api_hash=Config.API_HASH,
-    bot_token=Config.TG_BOT_TOKEN,
-    plugins=plugins,
-    workdir=Config.WORK_DIR,
-    workers=100
-)
-
 cmd = CMD()

@@ -2,8 +2,6 @@ import os
 import logging
 import inspect
 
-from bot import aio
-
 log_file_path = "./bot/bot_logs.log"
 
 class Logger:
@@ -52,7 +50,7 @@ class Logger:
     def info(self, message):
         self.logger.info(message)
 
-    async def error(self, message, user=None):
+    def error(self, message, user=None):
         caller_frame = inspect.currentframe().f_back
         caller_filename = os.path.basename(caller_frame.f_globals['__file__'])
         self.logger.error(f'{caller_filename} - {message}')

@@ -1,4 +1,4 @@
-from .settings import bot_set
+from bot.settings import bot_set
 
 from config import Config
 from pyrogram.types import Message
@@ -40,9 +40,13 @@ async def fetch_user_details(msg: Message, reply=False, provider=None):
 
 async def check_user(uid=None, msg=None, restricted=False):
     """
-    uid - User ID (only needed for restricted access)
-    msg - Pyrogram Message (for getting chatid and userid)
-    restricted - Access only to admins (bool)
+    Args:
+        uid - User ID (only needed for restricted access)
+        msg - Pyrogram Message (for getting chatid and userid)
+        restricted - Access only to admins (bool)
+    Returns:
+        True - Can access
+        False - Cannot Access 
     """
     if restricted:
         if uid in bot_set.admins:
@@ -60,22 +64,34 @@ async def check_user(uid=None, msg=None, restricted=False):
     return False
 
 
-async def antiSpam(uid, cid) -> bool:
+async def antiSpam(uid=None, cid=None, revoke=False) -> bool:
     """
+    Checks if user/chat in waiting mode(anti spam)
     Args
-        uid: User id
-        cid: Chat id
+        uid: User id (int)
+        cid: Chat id (int)
+        revoke: bool (if to revoke the given ID)
     Returns:
         True - if spam
         False - if not spam
     """
-    if bot_set.anti_spam == 'CHAT+':
-        if cid in current_user:
-            return True
-        elif uid in current_user:
-            return True
-    elif bot_set.anti_spam == 'USER':
-        if uid in current_user:
-            return True
+    print(current_user)
+    if revoke:
+        if bot_set.anti_spam == 'CHAT+':
+            if cid in current_user:
+                current_user.remove(cid)
+        elif bot_set.anti_spam == 'USER':
+            if uid in current_user:
+                current_user.remove(uid)
     else:
+        if bot_set.anti_spam == 'CHAT+':
+            if cid in current_user:
+                return True
+            else:
+                current_user.append(cid)
+        elif bot_set.anti_spam == 'USER':
+            if uid in current_user:
+                return True
+            else:
+                current_user.append(uid)
         return False

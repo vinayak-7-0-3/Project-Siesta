@@ -1,4 +1,4 @@
-from ..settings import bot_set
+from bot.settings import bot_set
 from .tr_en import EN
 from .tr_hi import HI
 

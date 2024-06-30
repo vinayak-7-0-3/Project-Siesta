@@ -63,3 +63,22 @@ class Config(object):
     LOG_CHAT = getenv("LOG_CHAT", "")
     LOG_ALL_INFO = getenv("LOG_ALL_INFO", "")
     CLEAR_LOG_FILE = getenv("CLEAR_LOG_FILE", False)
+#--------------------
+
+# QOBUZ
+
+#--------------------
+    QOBUZ_EMAIL = getenv("QOBUZ_EMAIL", None)
+    QOBUZ_PASSWORD = getenv("QOBUZ_PASSWORD", None)
+    QOBUZ_USER = getenv("QOBUZ_USER", None)
+    QOBUZ_TOKEN = getenv("QOBUZ_TOKEN", None)
+#--------------------
+
+# DEEZER
+
+#--------------------
+    DEEZER_EMAIL = getenv("DEEZER_EMAIL", None)
+    DEEZER_PASSWORD = getenv("DEEZER_PASSWORD", None)
+    DEEZER_BF_SECRET = getenv("DEEZER_BF_SECRET", None)
+    DEEZER_TRACK_URL_KEY = getenv("DEEZER_TRACK_URL_KEY", None)
+    DEEZER_ARL = getenv("DEEZER_ARL", None)

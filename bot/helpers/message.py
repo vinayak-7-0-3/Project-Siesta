@@ -1,4 +1,4 @@
-from bot import aio
+from ..tgclient import aio
 
 from .utils import fetch_user_details
 

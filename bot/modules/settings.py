@@ -2,7 +2,7 @@ from bot import CMD
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, Message
 
-from ..helpers.settings import bot_set
+from ..settings import bot_set
 from ..helpers.translations import lang
 from ..helpers.buttons.settings import *
 from ..helpers.database.pg_impl import set_db

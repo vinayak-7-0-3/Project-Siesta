@@ -116,7 +116,7 @@ class DeezerAPI:
         user_data = await self._api_call('deezer.getUserData')
         if not user_data['USER']['USER_ID']:
             raise Exception('Invalid arl')
-
+        self.user = user_data
         return user_data
 
 deezerapi = DeezerAPI()

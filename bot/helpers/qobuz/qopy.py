@@ -130,7 +130,7 @@ class QoClient:
         self.uat = usr_info["user_auth_token"]
         self.session.headers.update({"X-User-Auth-Token": self.uat})
         self.label = usr_info["user"]["credential"]["parameters"]["short_label"]
-        LOGGER.info(f"Loaded QOBUZ - Membership Status: {self.label}")
+        LOGGER.info(f"QOBUZ : Membership Status: {self.label}")
 
     async def test_secret(self, sec):
         try:

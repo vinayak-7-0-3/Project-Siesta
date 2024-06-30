@@ -23,9 +23,9 @@ class Bot(Client):
 
     async def start(self):
         await super().start()
-        LOGGER.info("BOT : Started Successfully")
         await bot_set.login_qobuz()
         await bot_set.login_deezer()
+        LOGGER.info("BOT : Started Successfully")
 
     async def stop(self, *args):
         await super().stop()

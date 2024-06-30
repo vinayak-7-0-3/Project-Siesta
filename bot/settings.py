@@ -71,6 +71,7 @@ class BotSettings:
                 await deezerapi.login()
                 self.deezer = deezerapi
                 self.clients.append(deezerapi)
+                LOGGER.info(f"DEEZER : Subscription - {deezerapi.user['OFFER_NAME']}")
             else:
                 LOGGER.error('DEEZER : Check BF_SECRET and TRACK_URL_KEY')
 

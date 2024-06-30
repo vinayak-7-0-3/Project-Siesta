@@ -12,6 +12,8 @@ from .helpers.deezer.dzapi import deezerapi
 
 class BotSettings:
     def __init__(self):
+        self.deezer = False
+        self.qobuz = False
         self.admins = Config.ADMINS
 
         db_users, _ = set_db.get_variable('AUTH_USERS')
@@ -58,6 +60,7 @@ class BotSettings:
         if Config.QOBUZ_EMAIL or Config.QOBUZ_USER:
             try:
                 await qobuz_api.login()
+                self.qobuz = qobuz_api
                 self.clients.append(qobuz_api)
             except Exception as e:
                 LOGGER.error(e)
@@ -66,6 +69,7 @@ class BotSettings:
         if Config.DEEZER_ARL or Config.DEEZER_EMAIL:
             if Config.DEEZER_BF_SECRET and Config.DEEZER_TRACK_URL_KEY:
                 await deezerapi.login()
+                self.deezer = deezerapi
                 self.clients.append(deezerapi)
             else:
                 LOGGER.error('DEEZER : Check BF_SECRET and TRACK_URL_KEY')

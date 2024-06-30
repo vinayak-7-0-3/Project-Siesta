@@ -42,12 +42,13 @@ Auth Chats : {4}
     MAIN_MENU_BUTTON = 'MAIN MENU'
     CLOSE_BUTTON = 'CLOSE'
     TELEGRAM = 'Telegram'
+    QOBUZ = 'Qobuz'
+    DEEZER = 'Deezer'
     BOT_PUBLIC = 'Bot Public - {}'
     BOT_LANGUAGE = 'Language'
     ANTI_SPAM = 'Anit Spam - {}'
 
-
-
+    QOBUZ_QUALITY_PANEL = '<b>Edit Qobuz Quality Here</b>'
 
 
 #----------------

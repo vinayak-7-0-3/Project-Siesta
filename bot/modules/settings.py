@@ -10,14 +10,20 @@ from ..helpers.message import send_message, edit_message
 from ..helpers.utils import fetch_user_details, check_user
 
 @Client.on_message(filters.command(CMD.SETTINGS))
-async def settings(client, message):
+async def settings(c, message):
     if await check_user(message.from_user.id, restricted=True):
         user = await fetch_user_details(message)
         await send_message(user, lang.INIT_SETTINGS_PANEL, markup=main_menu())
 
 
+
+#--------------------
+
+# TELEGRAM SETTINGS
+
+#--------------------
 @Client.on_callback_query(filters.regex(pattern=r"^tgPanel"))
-async def tg_cb(client, cb:CallbackQuery):
+async def tg_cb(c, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
         await edit_message(
             cb.message, 
@@ -56,6 +62,41 @@ async def anti_spam_cb(client, cb:CallbackQuery):
             pass
 
 
+#--------------------
+
+# QOBUZ
+
+#--------------------
+
+@Client.on_callback_query(filters.regex(pattern=r"^qbP"))
+async def qobuz_cb(c, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        quality = {5:'MP3 320', 6:'Lossless', 7:'24B<=96KHZ',27:'24B>96KHZ'}
+        current = bot_set.qobuz.quality
+        quality[current] = quality[current] + '✅'
+        try:
+            await edit_message(
+                cb.message,
+                lang.QOBUZ_QUALITY_PANEL,
+                markup=qb_button(quality)
+            )
+        except:pass
+
+@Client.on_callback_query(filters.regex(pattern=r"^qbQ"))
+async def qobuz_quality_cb(c, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        qobuz = {5:'MP3 320', 6:'Lossless', 7:'24B<=96KHZ',27:'24B>96KHZ'}
+        to_set = cb.data.split('_')[1]
+        bot_set.qobuz.quality = list(filter(lambda x: qobuz[x] == to_set, qobuz))[0]
+        await qobuz_cb(c, cb)
+
+
+
+#--------------------
+
+# COMMON
+
+#--------------------
 @Client.on_callback_query(filters.regex(pattern=r"^main_menu"))
 async def main_menu_cb(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
@@ -77,43 +118,45 @@ async def close_cb(client, cb:CallbackQuery):
 
 @Client.on_message(filters.command(CMD.BAN))
 async def ban(client:Client, msg:Message):
-    try:
-        id = int(msg.text.split(" ", maxsplit=1)[1])
-    except:
-        await send_message(msg, lang.BAN_AUTH_FORMAT)
-        return
+    if await check_user(msg.from_user.id, restricted=True):
+        try:
+            id = int(msg.text.split(" ", maxsplit=1)[1])
+        except:
+            await send_message(msg, lang.BAN_AUTH_FORMAT)
+            return
 
-    user = False if str(id).startswith('-100') else True
-    if user:
-        if id in bot_set.auth_users:
-            bot_set.auth_users.remove(id)
-            set_db.set_variable('AUTH_USERS', str(bot_set.auth_users))
-        else: await send_message(msg, lang.USER_DOEST_EXIST)
-    else:
-        if id in bot_set.auth_chats:
-            bot_set.auth_chats.remove(id)
-            set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
-        else: await send_message(msg, lang.USER_DOEST_EXIST)
-    await send_message(msg, lang.BAN_ID)
+        user = False if str(id).startswith('-100') else True
+        if user:
+            if id in bot_set.auth_users:
+                bot_set.auth_users.remove(id)
+                set_db.set_variable('AUTH_USERS', str(bot_set.auth_users))
+            else: await send_message(msg, lang.USER_DOEST_EXIST)
+        else:
+            if id in bot_set.auth_chats:
+                bot_set.auth_chats.remove(id)
+                set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
+            else: await send_message(msg, lang.USER_DOEST_EXIST)
+        await send_message(msg, lang.BAN_ID)
         
 
 @Client.on_message(filters.command(CMD.AUTH))
 async def auth(client:Client, msg:Message):
-    try:
-        id = int(msg.text.split(" ", maxsplit=1)[1])
-    except:
-        await send_message(msg, lang.BAN_AUTH_FORMAT)
-        return
+    if await check_user(msg.from_user.id, restricted=True):
+        try:
+            id = int(msg.text.split(" ", maxsplit=1)[1])
+        except:
+            await send_message(msg, lang.BAN_AUTH_FORMAT)
+            return
 
-    user = False if str(id).startswith('-100') else True
-    if user:
-        if id not in bot_set.auth_users:
-            bot_set.auth_users.append(id)
-            set_db.set_variable('AUTH_USERS', str(bot_set.auth_users))
-        else: await send_message(msg, lang.USER_EXIST)
-    else:
-        if id not in bot_set.auth_chats:
-            bot_set.auth_chats.append(id)
-            set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
-        else: await send_message(msg, lang.USER_EXIST)
-    await send_message(msg, lang.AUTH_ID)
+        user = False if str(id).startswith('-100') else True
+        if user:
+            if id not in bot_set.auth_users:
+                bot_set.auth_users.append(id)
+                set_db.set_variable('AUTH_USERS', str(bot_set.auth_users))
+            else: await send_message(msg, lang.USER_EXIST)
+        else:
+            if id not in bot_set.auth_chats:
+                bot_set.auth_chats.append(id)
+                set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
+            else: await send_message(msg, lang.USER_EXIST)
+        await send_message(msg, lang.AUTH_ID)

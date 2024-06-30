@@ -1,6 +1,5 @@
 from bot.settings import bot_set
 
-from config import Config
 from pyrogram.types import Message
 
 current_user = []

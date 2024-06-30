@@ -1,3 +1,5 @@
+import os
+
 from ..tgclient import aio
 
 from .utils import fetch_user_details
@@ -24,7 +26,7 @@ async def send_message(details, item, type='text', caption=None, markup=None, ch
     elif type == 'audio':
         msg = await aio.send_audio(
             chat_id=chat_id,
-            audio=to_send,
+            audio=item,
             caption=caption,
             duration=int(meta['duration']),
             performer=meta['artist'],
@@ -37,7 +39,7 @@ async def send_message(details, item, type='text', caption=None, markup=None, ch
     elif type == 'pic':
         msg = await aio.send_photo(
             chat_id=chat_id,
-            photo=to_send,
+            photo=item,
             caption=caption,
             reply_to_message_id=details['r_id']
         )

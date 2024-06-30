@@ -1,5 +1,6 @@
 import os
 import json
+import requests
 
 from config import Config
 from bot.logger import LOGGER
@@ -37,7 +38,7 @@ class BotSettings:
         elif Config.RCLONE_CONFIG:
             if Config.RCLONE_CONFIG.startswith('http'):
                 rclone = requests.get(Config.RCLONE_CONFIG).content
-                if response.status_code != 200:
+                if rclone.status_code != 200:
                     LOGGER.info("RCLONE : Error retreiving file from Config URL")
                     self.rclone = False
                 else:

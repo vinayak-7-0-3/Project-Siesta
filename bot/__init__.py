@@ -1,5 +1,4 @@
 from config import Config
-from pyrogram import Client
 
 bot = Config.BOT_USERNAME
 

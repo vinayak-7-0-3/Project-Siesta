@@ -1,10 +1,7 @@
 import os
-import asyncio
-import requests
 
 from bot import Config
 
-from .logger import LOGGER
 from .tgclient import aio
 
 if __name__ == "__main__":

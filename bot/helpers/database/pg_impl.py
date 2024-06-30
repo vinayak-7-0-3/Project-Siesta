@@ -1,4 +1,3 @@
-import json
 import psycopg2
 import datetime
 import psycopg2.extras

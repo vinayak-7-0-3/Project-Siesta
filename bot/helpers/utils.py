@@ -17,7 +17,12 @@ user_details = {
 }
 
 
-async def fetch_user_details(msg: Message, reply=False, provider=None):
+async def fetch_user_details(msg: Message, reply=False) -> dict:
+    """
+    args:
+        msg - pyrogram Message()
+        reply - if user message was reply to another message
+    """
     details = user_details.copy()
 
     details['user_id'] = msg.from_user.id
@@ -28,8 +33,6 @@ async def fetch_user_details(msg: Message, reply=False, provider=None):
         details['user_name'] = msg.from_user.mention()
     details['r_id'] = msg.reply_to_message.id if reply else msg.id
     details['chat_id'] = msg.chat.id
-    if provider:
-        details['provider'] = provider
     try:
         details['bot_msg'] = msg.id
     except:
@@ -37,7 +40,7 @@ async def fetch_user_details(msg: Message, reply=False, provider=None):
     return details
 
 
-async def check_user(uid=None, msg=None, restricted=False):
+async def check_user(uid=None, msg=None, restricted=False) -> bool:
     """
     Args:
         uid - User ID (only needed for restricted access)
@@ -74,7 +77,6 @@ async def antiSpam(uid=None, cid=None, revoke=False) -> bool:
         True - if spam
         False - if not spam
     """
-    print(current_user)
     if revoke:
         if bot_set.anti_spam == 'CHAT+':
             if cid in current_user:

@@ -57,14 +57,6 @@ class Config(object):
     RCLONE_DEST = getenv("RCLONE_DEST", 'remote:newfolder')
 #--------------------
 
-# LOGGING (Error/Info)
-
-#--------------------
-    LOG_CHAT = getenv("LOG_CHAT", "")
-    LOG_ALL_INFO = getenv("LOG_ALL_INFO", "")
-    CLEAR_LOG_FILE = getenv("CLEAR_LOG_FILE", False)
-#--------------------
-
 # QOBUZ
 
 #--------------------

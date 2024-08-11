@@ -6,6 +6,7 @@ class EN(object):
 #
 #----------------
     WELCOME_MSG = "Hello {}"
+    TASK_COMPLETED = "Download Finished"
 
 
 
@@ -57,3 +58,5 @@ Auth Chats : {4}
 #
 #----------------
     ERR_NO_LINK = 'No link found :('
+    ERR_LINK_RECOGNITION = "Sorry, couldn't recognise the given link."
+    ERR_QOBUZ_NOT_STREAMABLE = "This track/album is not available to download."

@@ -171,4 +171,26 @@ class QoClient:
             raise Exception("QOBUZ : Can't find any valid app secret")
 
 
+
+
+
+    async def get_track_url(self, id):
+            fmt_id = self.quality
+            return await self.api_call("track/getFileUrl", id=id, fmt_id=fmt_id)
+
+    async def get_album_meta(self, id):
+        return await self.api_call("album/get", id=id)
+
+    async def get_track_meta(self, id):
+        return await self.api_call("track/get", id=id)
+
+    async def get_artist_meta(self, id):
+        return await self.multi_meta("artist/get", "albums_count", id, None)
+
+    async def get_plist_meta(self, id):
+        return await self.multi_meta("playlist/get", "tracks_count", id, None)
+
+    async def get_label_meta(self, id):
+        return await self.multi_meta("label/get", "albums_count", id, None)
+
 qobuz_api = QoClient()

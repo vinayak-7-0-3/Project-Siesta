@@ -1,16 +1,16 @@
-import asyncio
-
 from bot import CMD
 from pyrogram.types import Message
 from pyrogram import Client, filters
 
+from bot.logger import LOGGER
 from ..helpers.translations import lang
-from ..helpers.utils import check_user, antiSpam
-from ..helpers.message import send_message
 
+from ..helpers.message import send_message
+from ..helpers.qobuz.handler import start_qobuz
+from ..helpers.utils import check_user, antiSpam, fetch_user_details
 
 @Client.on_message(filters.command(CMD.DOWNLOAD))
-async def download_track(client, msg:Message):
+async def download_track(c, msg:Message):
     if await check_user(msg=msg):
         try:
             if msg.reply_to_message:
@@ -20,11 +20,37 @@ async def download_track(client, msg:Message):
                 link = msg.text.split(" ", maxsplit=1)[1]
                 reply = False
         except:
-            await send_message(msg, lang.ERR_NO_LINK)
+            return await send_message(msg, lang.ERR_NO_LINK)
 
+        if not link:
+            return await send_message(msg, lang.ERR_LINK_RECOGNITION)
+        
         spam = await antiSpam(msg.from_user.id, msg.chat.id)
         if not spam:
-            # dummy task
-            await send_message(msg, 'Downlaoding.......')
-            await asyncio.sleep(30)
+            user = await fetch_user_details(msg, reply)
+            user['link'] = link
+            bot_msg = await send_message(msg, 'Downlaoding.......')
+            try:
+                await start_link(link, user)
+                await send_message(user, lang.TASK_COMPLETED)
+            except Exception as e:
+                LOGGER.error(e)
+            await c.delete_messages(msg.chat.id, bot_msg.id)
             await antiSpam(msg.from_user.id, msg.chat.id, True)
+
+async def start_link(link:str, user:dict):
+    tidal = ["https://tidal.com", "https://listen.tidal.com", "tidal.com", "listen.tidal.com"]
+    deezer = ["https://deezer.page.link", "https://deezer.com", "deezer.com", "https://www.deezer.com"]
+    qobuz = ["https://play.qobuz.com", "https://open.qobuz.com", "https://www.qobuz.com"]
+    spotify = ["https://open.spotify.com"]
+    if link.startswith(tuple(tidal)):
+        return "tidal"
+    elif link.startswith(tuple(deezer)):
+        return "deezer"
+    elif link.startswith(tuple(qobuz)):
+        user['provider'] = 'Qobuz'
+        await start_qobuz(link, user)
+    elif link.startswith(tuple(spotify)):
+        return 'spotify'
+    else:
+        return None

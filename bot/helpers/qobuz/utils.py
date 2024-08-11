@@ -26,7 +26,28 @@ async def get_album_metadata(id):
         return None, lang.ERR_QOBUZ_NOT_STREAMABLE
     metadata = {
         'itemid': id,
-        'albumartist': q_meta['artist']['name']
+        'albumartist': q_meta['artist']['name'],
+        'upc': q_meta['upc'],
+        'title': q_meta['title'],
+        'album': q_meta['title'],
+        'artist': q_meta['artist']['name'],
+        'tracknumber': None,
+        'date': q_meta['release_date_original'],
+        'lyrics': None,
+        'isrc': '',
+        'totaltracks': q_meta['tracks_count'],
+        'volume': '',
+        'totalvolume': '',
+        'cover': '',
+        'thumbnail': '',
+        'extension': None,
+        'duration': q_meta['duration'],  # in seconds
+        'copyright': q_meta['copyright'],
+        'genre': q_meta['genre']['name'],
+        'provider': 'Qobuz',
+        'quality': '',
+        'explicit': q_meta['parental_warning'],
+        
 
     }
 

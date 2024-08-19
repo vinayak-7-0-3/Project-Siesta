@@ -36,7 +36,7 @@ async def get_track_metadata(item_id):
     metadata['tracknumber'] = q_meta['track_number']
     metadata['date'] = q_meta['release_date_original']
     metadata['totaltracks'] = q_meta['album']['tracks_count']
-    metadata['provider'] = 'Qobuz'
+    metadata['provider'] = 'qobuz'
 
     return metadata, None  
         
@@ -59,7 +59,7 @@ async def get_album_metadata(item_id):
     metadata['copyright'] = q_meta['copyright']
     metadata['genre'] = q_meta['genre']['name']
     metadata['explicit'] = q_meta['parental_warning']
-    metadata['provider'] = 'Qobuz'
+    metadata['provider'] = 'qobuz'
     metadata['tracks'] = await get_track_meta_from_alb(q_meta, metadata)
 
     return metadata, None

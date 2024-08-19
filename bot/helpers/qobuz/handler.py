@@ -4,6 +4,7 @@ from config import Config
 from pathvalidate import sanitize_filepath
 
 from ..utils import download_file, run_concurrent_tasks
+from ..metadata import set_metadata
 
 
 async def start_qobuz(url:str, user:dict):
@@ -27,7 +28,7 @@ async def start_qobuz(url:str, user:dict):
             await start_track(item_id, user, None)
 
 
-async def start_album(item_id:int, user:dict):
+async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     album_meta, err = await get_album_metadata(item_id)
     if err:
         return await send_message(user, err)
@@ -45,6 +46,9 @@ async def start_album(item_id:int, user:dict):
     for track in album_meta['tracks']:
         tasks.append(start_track(track['itemid'], user, track, False, album_folder))
     await run_concurrent_tasks(tasks)
+
+    if upload:
+        pass
 
 async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None):
     if not track_meta:
@@ -65,7 +69,10 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
 
     filename = await format_string(Config.TRACK_NAME_FORMAT, track_meta, user)
     filepath += f"{filename}.{track_meta['extension']}"
+    filepath = sanitize_filepath(filepath)
 
-    err = await download_file(url, sanitize_filepath(filepath))
+    err = await download_file(url, filepath)
     if err:
         return await send_message(user, err)
+    
+    await set_metadata(filepath, track_meta)

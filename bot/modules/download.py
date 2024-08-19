@@ -29,13 +29,13 @@ async def download_track(c, msg:Message):
         if not spam:
             user = await fetch_user_details(msg, reply)
             user['link'] = link
-            bot_msg = await send_message(msg, 'Downlaoding.......')
+            user['bot_msg'] = await send_message(msg, 'Downloading.......')
             try:
                 await start_link(link, user)
                 await send_message(user, lang.TASK_COMPLETED)
             except Exception as e:
                 LOGGER.error(e)
-            await c.delete_messages(msg.chat.id, bot_msg.id)
+            await c.delete_messages(msg.chat.id, user['bot_msg'].id)
             await antiSpam(msg.from_user.id, msg.chat.id, True)
 
 async def start_link(link:str, user:dict):

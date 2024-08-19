@@ -154,15 +154,10 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
 
     return msg
 
-async def edit_message(user, text, msg_id=None, markup=None):
-    if not isinstance(user, dict):
-        user = await fetch_user_details(user)
-    msg_id = user['bot_msg'] if not msg_id else msg_id
-    msg = await aio.edit_message_text(
-        chat_id=user['chat_id'],
-        message_id=msg_id,
+
+async def edit_message(msg:Message, text, markup=None):
+    edited = await msg.edit_text(
         text=text,
-        reply_markup=markup,
-        disable_web_page_preview=True
+        reply_markup=markup
     )
-    return msg
+    return edited

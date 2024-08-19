@@ -3,7 +3,7 @@ import aiohttp
 import asyncio
 
 from config import Config
-    
+
 
 async def download_file(url, path):
     """path : including filename with extention"""
@@ -51,11 +51,19 @@ async def format_string(text:str, data:dict, user=None):
     return text
 
 
-async def run_concurrent_tasks(tasks):
+async def run_concurrent_tasks(tasks, update=None):
     semaphore = asyncio.Semaphore(Config.MAX_WORKERS)
 
+    i = [0]
     async def sem_task(task):
         async with semaphore:
-            await task
+            result = await task
+            if update and result:
+                i[0]+=1
+                edit_msg = update['func']
+                try:
+                    await edit_msg(update['param'], update['text'].format(i[0], len(tasks)))
+                except:
+                    pass
 
     await asyncio.gather(*(sem_task(task) for task in tasks))

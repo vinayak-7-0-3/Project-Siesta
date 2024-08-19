@@ -3,7 +3,7 @@ import re
 
 from .qopy import qobuz_api
 from ..translations import lang
-from ..message import send_message
+from ..message import send_message, edit_message
 from ..utils import format_string
 from ..metadata import metadata as base_meta
 

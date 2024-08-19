@@ -45,7 +45,14 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     tasks = []
     for track in album_meta['tracks']:
         tasks.append(start_track(track['itemid'], user, track, False, album_folder))
-    await run_concurrent_tasks(tasks)
+        
+    
+    update_details = {
+        'text': 'Downloading {} of {}',
+        'func': edit_message,
+        'param': user['bot_msg']
+    }
+    await run_concurrent_tasks(tasks, update_details)
 
     if upload:
         pass
@@ -76,3 +83,9 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
         return await send_message(user, err)
     
     await set_metadata(filepath, track_meta)
+
+    if upload:
+        pass
+
+    # Acknowledge task finished
+    return True

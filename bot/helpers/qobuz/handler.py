@@ -44,7 +44,7 @@ async def start_album(item_id:int, user:dict):
     tasks = []
     for track in album_meta['tracks']:
         tasks.append(start_track(track['itemid'], user, track, False, album_folder))
-    await run_concurrent_tasks(tasks, 5)
+    await run_concurrent_tasks(tasks)
 
 async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None):
     if not track_meta:

@@ -1,7 +1,8 @@
-
 import os
 import aiohttp
 import asyncio
+
+from config import Config
     
 
 async def download_file(url, path):
@@ -50,8 +51,8 @@ async def format_string(text:str, data:dict, user=None):
     return text
 
 
-async def run_concurrent_tasks(tasks, max_concurrent_tasks):
-    semaphore = asyncio.Semaphore(max_concurrent_tasks)
+async def run_concurrent_tasks(tasks):
+    semaphore = asyncio.Semaphore(Config.MAX_WORKERS)
 
     async def sem_task(task):
         async with semaphore:

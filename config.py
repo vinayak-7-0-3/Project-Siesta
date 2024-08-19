@@ -74,3 +74,9 @@ class Config(object):
     DEEZER_BF_SECRET = getenv("DEEZER_BF_SECRET", None)
     DEEZER_TRACK_URL_KEY = getenv("DEEZER_TRACK_URL_KEY", None)
     DEEZER_ARL = getenv("DEEZER_ARL", None)
+#--------------------
+
+# CONCURRENT
+
+#--------------------
+    MAX_WORKERS = int(getenv("MAX_WORKERS", 5))

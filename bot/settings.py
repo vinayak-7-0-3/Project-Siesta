@@ -23,14 +23,17 @@ class BotSettings:
 
         self.check_upload_mode()
 
-        spam, _ = set_db.get_variable('ANTI_SPAM')
+        spam, _ = set_db.get_variable('ANTI_SPAM') #bool
         self.anti_spam = spam if spam else 'OFF'
 
-        public, _ = set_db.get_variable('BOT_PUBLIC')
+        public, _ = set_db.get_variable('BOT_PUBLIC') #bool
         self.bot_public = True if public else False
 
-        lang, _ = set_db.get_variable('BOT_LANGUAGE')
+        lang, _ = set_db.get_variable('BOT_LANGUAGE') #str
         self.bot_lang = lang if lang else 'en'
+
+        alb_art, _ = set_db.get_variable('ALBUM_ART_POST') #bool
+        self.alb_art = True if alb_art else False
 
         self.clients = []
 
@@ -68,10 +71,14 @@ class BotSettings:
     async def login_deezer(self):
         if Config.DEEZER_ARL or Config.DEEZER_EMAIL:
             if Config.DEEZER_BF_SECRET and Config.DEEZER_TRACK_URL_KEY:
-                await deezerapi.login()
-                self.deezer = deezerapi
-                self.clients.append(deezerapi)
-                LOGGER.info(f"DEEZER : Subscription - {deezerapi.user['OFFER_NAME']}")
+                login = await deezerapi.login()
+                if login:
+                    self.deezer = deezerapi
+                    LOGGER.info(f"DEEZER : Subscription - {deezerapi.user['OFFER_NAME']}")
+                else:
+                    try:
+                        await deezerapi.session.close()
+                    except:pass
             else:
                 LOGGER.error('DEEZER : Check BF_SECRET and TRACK_URL_KEY')
 

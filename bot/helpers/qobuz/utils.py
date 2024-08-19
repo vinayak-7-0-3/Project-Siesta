@@ -3,56 +3,90 @@ import re
 
 from .qopy import qobuz_api
 from ..translations import lang
+from ..message import send_message
+from ..utils import format_string
+from ..metadata import metadata as base_meta
+
+from bot.settings import bot_set
 
 
 
-
-async def get_track_metadata(id):
-    raw_meta = await qobuz_api.get_track_url(id)
-    print(raw_meta)
-    return
+async def get_track_metadata(item_id):
+    raw_meta = await qobuz_api.get_track_url(item_id)
     if "sample" not in raw_meta and raw_meta.get('sampling_rate'):
-        q_meta = qobuz_api.get_track_meta(id)
+        q_meta = await qobuz_api.get_track_meta(item_id)
         if not q_meta.get('streamable'):
-            return None, None, lang.ERR_QOBUZ_NOT_STREAMABLE
+            return None, lang.ERR_QOBUZ_NOT_STREAMABLE
     else:
-        return None, None, lang.ERR_QOBUZ_NOT_STREAMABLE
+        return None, lang.ERR_QOBUZ_NOT_STREAMABLE
+    
+    metadata = base_meta.copy()
+    metadata['itemid'] = item_id
+    metadata['copyright'] = q_meta['copyright']
+    metadata['albumartist'] = q_meta['album']['artist']['name']
+    metadata['cover'] = q_meta['album']['image']['large']
+    metadata['thumbnail'] = q_meta['album']['image']['large']
+    metadata['artist'] = await get_artists_name(q_meta['album'])
+    metadata['upc'] = q_meta['album']['upc']
+    metadata['album'] = q_meta['album']['title']
+    metadata['isrc'] = q_meta['isrc']
+    metadata['title'] = q_meta['title']
+    metadata['duration'] = q_meta['duration']
+    metadata['explicit'] = q_meta['parental_warning']
+    metadata['tracknumber'] = q_meta['track_number']
+    metadata['date'] = q_meta['release_date_original']
+    metadata['totaltracks'] = q_meta['album']['tracks_count']
+    metadata['provider'] = 'Qobuz'
+
+    return metadata, None  
         
-        
-async def get_album_metadata(id):
-    q_meta = await qobuz_api.get_album_meta(id)
-    print(q_meta)
+async def get_album_metadata(item_id):
+    q_meta = await qobuz_api.get_album_meta(item_id)
     if not q_meta.get('streamable'):
         return None, lang.ERR_QOBUZ_NOT_STREAMABLE
-    metadata = {
-        'itemid': id,
-        'albumartist': q_meta['artist']['name'],
-        'upc': q_meta['upc'],
-        'title': q_meta['title'],
-        'album': q_meta['title'],
-        'artist': q_meta['artist']['name'],
-        'tracknumber': None,
-        'date': q_meta['release_date_original'],
-        'lyrics': None,
-        'isrc': '',
-        'totaltracks': q_meta['tracks_count'],
-        'volume': '',
-        'totalvolume': '',
-        'cover': '',
-        'thumbnail': '',
-        'extension': None,
-        'duration': q_meta['duration'],  # in seconds
-        'copyright': q_meta['copyright'],
-        'genre': q_meta['genre']['name'],
-        'provider': 'Qobuz',
-        'quality': '',
-        'explicit': q_meta['parental_warning'],
-        
+    
+    metadata = base_meta.copy()
+    metadata['itemid'] = item_id
+    metadata['albumartist'] = q_meta['artist']['name']
+    metadata['upc'] = q_meta['upc']
+    metadata['title'] = q_meta['title']
+    metadata['album'] = q_meta['title']
+    metadata['artist'] = q_meta['artist']['name']
+    metadata['date'] = q_meta['release_date_original']
+    metadata['totaltracks'] = q_meta['tracks_count']
+    metadata['cover'] = q_meta['image']['large']
+    metadata['duration'] = q_meta['duration']
+    metadata['copyright'] = q_meta['copyright']
+    metadata['genre'] = q_meta['genre']['name']
+    metadata['explicit'] = q_meta['parental_warning']
+    metadata['provider'] = 'Qobuz'
+    metadata['tracks'] = await get_track_meta_from_alb(q_meta, metadata)
 
-    }
+    return metadata, None
 
-async def get_artists(meta):
-    pass
+async def get_track_meta_from_alb(q_meta:dict, alb_meta):
+    """
+    q_meta : raw metadata from qobuz(album)
+    alb_meta : Sorted metadata (album)
+    """
+    tracks = []
+    for track in q_meta['tracks']['items']:
+        metadata = alb_meta.copy()
+        metadata['itemid'] = track['id']
+        metadata['title'] = track['title']
+        metadata['duration'] = track['duration']
+        metadata['isrc'] = track['isrc']
+        metadata['tracknumber'] = track['track_number']
+        metadata['tracks'] = ''
+        tracks.append(metadata)
+    return tracks
+
+async def get_artists_name(meta):
+    artists = []
+    for a in meta['artists']:
+        artists.append(a['name'])
+    return ', '.join([str(artist) for artist in artists])
+
 
 async def check_type(url):
     possibles = {
@@ -178,3 +212,21 @@ def smart_discography_filter(
             items.append(filtered[0])
 
     return items
+
+async def post_album_art(user:dict, meta:dict):
+    if bot_set.alb_art:
+        caption = await format_string(lang.ALBUM_TEMPLATE, meta, user)
+        msg = await send_message(user, meta['cover'], 'pic', caption)
+        return msg
+    
+async def get_quality(meta:dict):
+    """
+    Args
+        meta : track url metadata dict
+    Returns
+        extention, quality
+    """
+    if qobuz_api.quality == 5:
+        return 'mp3', '320K'
+    else:
+        return 'flac', f'{meta["bit_depth"]}B - {meta["sampling_rate"]}k'

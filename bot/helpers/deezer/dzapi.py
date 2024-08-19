@@ -9,6 +9,7 @@ from Cryptodome.Cipher import Blowfish, AES
 from requests.models import HTTPError
 
 from config import Config
+from bot.logger import LOGGER
 
 class APIError(Exception):
     def __init__(self, type, msg, payload):
@@ -76,13 +77,19 @@ class DeezerAPI:
         })
         self.legacy_url_cipher = AES.new(Config.DEEZER_TRACK_URL_KEY.encode('ascii'), AES.MODE_ECB)
         self.bf_secret = Config.DEEZER_BF_SECRET.encode('ascii')
-        if Config.DEEZER_ARL:
-            await self.login_via_arl(Config.DEEZER_ARL)
-        else:
-            await self.login_via_email(
-                Config.DEEZER_EMAIL,
-                Config.DEEZER_PASSWORD
-            )
+        try:
+            if Config.DEEZER_ARL:
+                await self.login_via_arl(Config.DEEZER_ARL)
+            else:
+                await self.login_via_email(
+                    Config.DEEZER_EMAIL,
+                    Config.DEEZER_PASSWORD
+                )
+        except Exception as e:
+            LOGGER.error(f"DEEZER : {e}")
+            return False
+
+        return True
 
     async def login_via_email(self, email, password):
         # server sends set-cookie header with new sid

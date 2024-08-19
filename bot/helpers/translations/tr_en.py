@@ -49,6 +49,8 @@ Auth Chats : {4}
     BOT_LANGUAGE = 'Language'
     ANTI_SPAM = 'Anit Spam - {}'
 
+    ALBUM_ART_BUT = "Album Art : {}"
+
     QOBUZ_QUALITY_PANEL = '<b>Edit Qobuz Quality Here</b>'
 
 
@@ -60,3 +62,19 @@ Auth Chats : {4}
     ERR_NO_LINK = 'No link found :('
     ERR_LINK_RECOGNITION = "Sorry, couldn't recognise the given link."
     ERR_QOBUZ_NOT_STREAMABLE = "This track/album is not available to download."
+
+#----------------
+#
+# TRACK & ALBUM POSTS
+#
+#----------------
+    ALBUM_TEMPLATE = """
+🎶 <b>Title :</b> {title}
+👤 <b>Artist :</b> {artist}
+📅 <b>Release Date :</b> {date}
+🔢 <b>Total Tracks :</b> {totaltracks}
+📀 <b>Total Volumes :</b> {totalvolume}
+💫 <b>Quality :</b> {quality}
+📡 <b>Provider :</b> {provider}
+🔞 <b>Explicit :</b> {explicit}
+"""

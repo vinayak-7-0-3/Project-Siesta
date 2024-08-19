@@ -5,9 +5,9 @@ from pyrogram import Client, filters
 from bot.logger import LOGGER
 from ..helpers.translations import lang
 
-from ..helpers.message import send_message
 from ..helpers.qobuz.handler import start_qobuz
-from ..helpers.utils import check_user, antiSpam, fetch_user_details
+from ..helpers.message import send_message, antiSpam, check_user, fetch_user_details
+
 
 @Client.on_message(filters.command(CMD.DOWNLOAD))
 async def download_track(c, msg:Message):

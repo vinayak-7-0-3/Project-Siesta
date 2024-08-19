@@ -39,7 +39,7 @@ def main_menu():
     inline_keyboard = inline_keyboard + exit_button
     return InlineKeyboardMarkup(inline_keyboard)
 
-def tg_button(bot_public, anti_spam):
+def tg_button(bot_public, anti_spam, alb_art):
     inline_keyboard = [
         [
             InlineKeyboardButton(
@@ -57,6 +57,12 @@ def tg_button(bot_public, anti_spam):
             InlineKeyboardButton(
                 text=lang.ANTI_SPAM.format(anti_spam),
                 callback_data='antiSpam'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=lang.ALBUM_ART_BUT.format(alb_art),
+                callback_data='albArt'
             )
         ]
     ]

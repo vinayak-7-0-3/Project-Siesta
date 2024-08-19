@@ -6,8 +6,7 @@ from ..settings import bot_set
 from ..helpers.translations import lang
 from ..helpers.buttons.settings import *
 from ..helpers.database.pg_impl import set_db
-from ..helpers.message import send_message, edit_message
-from ..helpers.utils import fetch_user_details, check_user
+from ..helpers.message import send_message, edit_message, check_user, fetch_user_details
 
 @Client.on_message(filters.command(CMD.SETTINGS))
 async def settings(c, message):
@@ -34,7 +33,7 @@ async def tg_cb(c, cb:CallbackQuery):
                 len(bot_set.auth_users),
                 len(bot_set.auth_chats)
             ),
-            markup=tg_button(bot_set.bot_public, bot_set.anti_spam)
+            markup=tg_button(bot_set.bot_public, bot_set.anti_spam, bot_set.alb_art)
         )
 
 
@@ -61,6 +60,14 @@ async def anti_spam_cb(client, cb:CallbackQuery):
         except:
             pass
 
+@Client.on_callback_query(filters.regex(pattern=r"^albArt"))
+async def alb_art_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        alb_art = bot_set.alb_art
+        alb_art = False if alb_art else True
+        bot_set.alb_art = alb_art
+        set_db.set_variable('ALBUM_ART_POST', alb_art)
+        await tg_cb(client, cb)
 
 #--------------------
 

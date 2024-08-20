@@ -39,7 +39,7 @@ def main_menu():
     inline_keyboard = inline_keyboard + exit_button
     return InlineKeyboardMarkup(inline_keyboard)
 
-def tg_button(bot_public, anti_spam, alb_art):
+def tg_button(bot_public, anti_spam, alb_art, upload):
     inline_keyboard = [
         [
             InlineKeyboardButton(
@@ -63,6 +63,12 @@ def tg_button(bot_public, anti_spam, alb_art):
             InlineKeyboardButton(
                 text=lang.ALBUM_ART_BUT.format(alb_art),
                 callback_data='albArt'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=f"Upload : {upload}",
+                callback_data='upload'
             )
         ]
     ]

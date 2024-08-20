@@ -1,8 +1,12 @@
 import os
 import aiohttp
 import asyncio
+import shutil
 
 from config import Config
+from bot.settings import bot_set
+
+from .message import send_message
 
 
 async def download_file(url, path):
@@ -67,3 +71,37 @@ async def run_concurrent_tasks(tasks, update=None):
                     pass
 
     await asyncio.gather(*(sem_task(task) for task in tasks))
+
+async def handle_upload(filepath, batch=False, meta=None, user=None):
+    if bot_set.upload_mode == 'Local':
+        return
+    
+    path = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/"
+    if batch:
+        if bot_set.upload_mode == 'Telegram':
+            for track in meta:
+                thumb = track['filepath'].replace(track['extension'], 'jpg')
+                await download_file(track['thumbnail'], thumb)
+                await send_message(user, track['filepath'], 'audio', thumb=thumb, meta=track)
+        else:
+            await run_rclone(path)
+    else:
+        if bot_set.upload_mode == 'Telegram':
+            thumb = meta['filepath'].replace(meta['extension'], "jpg")
+            await download_file(meta['thumbnail'], thumb)
+            await send_message(user, filepath, 'audio', thumb=thumb, meta=meta)
+        else:
+            await run_rclone(path)
+
+
+async def run_rclone(to_upload):
+    cmd = f'rclone copy --config ./rclone.conf "{to_upload}" "{Config.RCLONE_DEST}"'
+    task = await asyncio.create_subprocess_shell(cmd)
+    await task.wait()
+
+async def cleanup(user):
+    if bot_set.upload_mode != 'Local':
+        try:
+            shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/")
+        except:
+            pass

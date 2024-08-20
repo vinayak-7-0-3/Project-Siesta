@@ -3,7 +3,7 @@ from config import Config
 
 from pathvalidate import sanitize_filepath
 
-from ..utils import download_file, run_concurrent_tasks
+from ..utils import download_file, run_concurrent_tasks, handle_upload
 from ..metadata import set_metadata
 
 
@@ -40,7 +40,11 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     
     alb_post = await post_album_art(user, album_meta)
 
-    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/qobuz/{user['r_id']}/{album_meta['title']}/"
+    if basefolder:
+        pass
+    else:
+        album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}/"
+
     # concurrent
     tasks = []
     for track in album_meta['tracks']:
@@ -48,21 +52,22 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
         
     
     update_details = {
-        'text': 'Downloading {} of {}',
+        'text': lang.DOWNLOAD_PROGRESS,
         'func': edit_message,
         'param': user['bot_msg']
     }
     await run_concurrent_tasks(tasks, update_details)
 
     if upload:
-        pass
+        await edit_message(user['bot_msg'], lang.UPLOADING)
+        await handle_upload(album_folder, True, album_meta['tracks'], user)
 
 async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None):
     if not track_meta:
         track_meta, err = await get_track_metadata(item_id)
         if err:
             return await send_message(user, err)
-        filepath = f"{Config.DOWNLOAD_BASE_DIR}/qobuz/{user['r_id']}/{track_meta['album']}/"
+        filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}/"
     else:
         filepath = basefolder
         
@@ -77,6 +82,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
     filename = await format_string(Config.TRACK_NAME_FORMAT, track_meta, user)
     filepath += f"{filename}.{track_meta['extension']}"
     filepath = sanitize_filepath(filepath)
+    track_meta['filepath'] = filepath
 
     err = await download_file(url, filepath)
     if err:
@@ -85,7 +91,8 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
     await set_metadata(filepath, track_meta)
 
     if upload:
-        pass
+        await edit_message(user['bot_msg'], lang.UPLOADING)
+        await handle_upload(filepath, False, track_meta, user)
 
     # Acknowledge task finished
     return True

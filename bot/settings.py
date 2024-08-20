@@ -42,22 +42,25 @@ class BotSettings:
             self.rclone = True
         elif Config.RCLONE_CONFIG:
             if Config.RCLONE_CONFIG.startswith('http'):
-                rclone = requests.get(Config.RCLONE_CONFIG).content
+                rclone = requests.get(Config.RCLONE_CONFIG, allow_redirects=True)
                 if rclone.status_code != 200:
                     LOGGER.info("RCLONE : Error retreiving file from Config URL")
                     self.rclone = False
                 else:
-                    with open('rclone.conf', 'w') as f:
-                        f.write(rclone)
+                    with open('rclone.conf', 'wb') as f:
+                        f.write(rclone.content)
                     self.rclone=True
         else:
             self.rclone = False
             
         db_upload, _ = set_db.get_variable('UPLOAD_MODE')
         if self.rclone and db_upload == 'rclone':
-            self.upload_mode = 'rclone'
+            self.upload_mode = 'RCLONE'
+        elif db_upload:
+            self.upload_mode = db_upload
         else:
-            self.upload_mode = 'tg'
+            self.upload_mode = 'Local'
+    
 
     async def login_qobuz(self):
         if Config.QOBUZ_EMAIL or Config.QOBUZ_USER:

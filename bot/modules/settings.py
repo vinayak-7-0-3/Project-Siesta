@@ -31,9 +31,10 @@ async def tg_cb(c, cb:CallbackQuery):
                 bot_set.bot_lang,
                 len(bot_set.admins),
                 len(bot_set.auth_users),
-                len(bot_set.auth_chats)
+                len(bot_set.auth_chats),
+                bot_set.upload_mode
             ),
-            markup=tg_button(bot_set.bot_public, bot_set.anti_spam, bot_set.alb_art)
+            markup=tg_button(bot_set.bot_public, bot_set.anti_spam, bot_set.alb_art, bot_set.upload_mode)
         )
 
 
@@ -55,6 +56,24 @@ async def anti_spam_cb(client, cb:CallbackQuery):
         nexti = (current + 1) % 3
         bot_set.anti_spam = anti[nexti]
         set_db.set_variable('ANTI_SPAM', anti[nexti])
+        try:
+            await tg_cb(client, cb)
+        except:
+            pass
+
+@Client.on_callback_query(filters.regex(pattern=r"^upload"))
+async def upload_mode_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        modes = ['Local', 'Telegram']
+        modes_count = 2
+        if bot_set.rclone:
+            modes.append('RCLONE')
+            modes_count+=1
+
+        current = modes.index(bot_set.upload_mode)
+        nexti = (current + 1) % modes_count
+        bot_set.upload_mode = modes[nexti]
+        set_db.set_variable('UPLOAD_MODE', modes[nexti])
         try:
             await tg_cb(client, cb)
         except:

@@ -6,6 +6,9 @@ class EN(object):
 #
 #----------------
     WELCOME_MSG = "Hello {}"
+    DOWNLOADING = 'Downloading........'
+    DOWNLOAD_PROGRESS = 'Downloading {} of {}'
+    UPLOADING = 'Uploading........'
     TASK_COMPLETED = "Download Finished"
 
 

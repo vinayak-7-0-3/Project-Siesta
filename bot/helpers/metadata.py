@@ -36,7 +36,8 @@ metadata = {
         'totalvolume': '',
         'genre': '',
         'provider': '',
-        'tracks': []
+        'tracks': [],
+        'filepath': ''
     }
 
 
@@ -94,7 +95,7 @@ async def savePic(handle, metadata):
     ext = metadata['extension']
 
     if not os.path.exists(album_art):
-        coverPath = Config.DOWNLOAD_BASE_DIR + f"/{metadata['provider']}/albumart/{metadata['itemid']}.jpg"
+        coverPath = Config.DOWNLOAD_BASE_DIR + f"/albumart/{metadata['provider']}/{metadata['itemid']}.jpg"
         await download_file(album_art, coverPath)
         album_art = coverPath
 

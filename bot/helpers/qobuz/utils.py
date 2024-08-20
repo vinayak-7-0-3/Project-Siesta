@@ -25,7 +25,7 @@ async def get_track_metadata(item_id):
     metadata['copyright'] = q_meta['copyright']
     metadata['albumartist'] = q_meta['album']['artist']['name']
     metadata['cover'] = q_meta['album']['image']['large']
-    metadata['thumbnail'] = q_meta['album']['image']['large']
+    metadata['thumbnail'] = q_meta['album']['image']['thumbnail']
     metadata['artist'] = await get_artists_name(q_meta['album'])
     metadata['upc'] = q_meta['album']['upc']
     metadata['album'] = q_meta['album']['title']
@@ -36,7 +36,7 @@ async def get_track_metadata(item_id):
     metadata['tracknumber'] = q_meta['track_number']
     metadata['date'] = q_meta['release_date_original']
     metadata['totaltracks'] = q_meta['album']['tracks_count']
-    metadata['provider'] = 'qobuz'
+    metadata['provider'] = 'Qobuz'
 
     return metadata, None  
         
@@ -55,11 +55,12 @@ async def get_album_metadata(item_id):
     metadata['date'] = q_meta['release_date_original']
     metadata['totaltracks'] = q_meta['tracks_count']
     metadata['cover'] = q_meta['image']['large']
+    metadata['thumbnail'] = q_meta['image']['thumbnail']
     metadata['duration'] = q_meta['duration']
     metadata['copyright'] = q_meta['copyright']
     metadata['genre'] = q_meta['genre']['name']
     metadata['explicit'] = q_meta['parental_warning']
-    metadata['provider'] = 'qobuz'
+    metadata['provider'] = 'Qobuz'
     metadata['tracks'] = await get_track_meta_from_alb(q_meta, metadata)
 
     return metadata, None

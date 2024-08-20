@@ -1,10 +1,11 @@
-from bot import CMD
 from pyrogram.types import Message
 from pyrogram import Client, filters
 
+from bot import CMD
 from bot.logger import LOGGER
-from ..helpers.translations import lang
 
+from ..helpers.utils import cleanup
+from ..helpers.translations import lang
 from ..helpers.qobuz.handler import start_qobuz
 from ..helpers.message import send_message, antiSpam, check_user, fetch_user_details
 
@@ -36,6 +37,7 @@ async def download_track(c, msg:Message):
             except Exception as e:
                 LOGGER.error(e)
             await c.delete_messages(msg.chat.id, user['bot_msg'].id)
+            await cleanup(user) # deletes uploaded files
             await antiSpam(msg.from_user.id, msg.chat.id, True)
 
 async def start_link(link:str, user:dict):

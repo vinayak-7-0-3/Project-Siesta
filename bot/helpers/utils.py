@@ -7,6 +7,7 @@ from config import Config
 from bot.settings import bot_set
 
 from .message import send_message
+from ..logger import LOGGER
 
 
 async def download_file(url, path):
@@ -73,10 +74,15 @@ async def run_concurrent_tasks(tasks, update=None):
     await asyncio.gather(*(sem_task(task) for task in tasks))
 
 async def handle_upload(filepath, batch=False, meta=None, user=None):
-    if bot_set.upload_mode == 'Local':
-        return
-    
     path = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/"
+
+    if bot_set.upload_mode == 'Local':
+        for item in os.listdir(path):
+            source_path = os.path.join(path, item)
+            if os.path.isdir(source_path):
+                to_move = os.path.join(Config.LOCAL_STORAGE, item)
+                shutil.move(source_path, to_move)
+    
     if batch:
         if bot_set.upload_mode == 'Telegram':
             for track in meta:
@@ -100,8 +106,7 @@ async def run_rclone(to_upload):
     await task.wait()
 
 async def cleanup(user):
-    if bot_set.upload_mode != 'Local':
-        try:
-            shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/")
-        except:
-            pass
+    try:
+        shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/")
+    except Exception as e:
+        LOGGER.info(e)

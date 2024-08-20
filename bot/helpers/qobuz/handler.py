@@ -28,7 +28,7 @@ async def start_qobuz(url:str, user:dict):
             await start_track(item_id, user, None)
 
 
-async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
+async def start_album(item_id:int, user:dict):
     album_meta, err = await get_album_metadata(item_id)
     if err:
         return await send_message(user, err)
@@ -40,10 +40,7 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     
     alb_post = await post_album_art(user, album_meta)
 
-    if basefolder:
-        pass
-    else:
-        album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}/"
+    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}/"
 
     # concurrent
     tasks = []
@@ -58,9 +55,9 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     }
     await run_concurrent_tasks(tasks, update_details)
 
-    if upload:
-        await edit_message(user['bot_msg'], lang.UPLOADING)
-        await handle_upload(album_folder, True, album_meta['tracks'], user)
+    # Upload
+    await edit_message(user['bot_msg'], lang.UPLOADING)
+    await handle_upload(album_folder, True, album_meta['tracks'], user)
 
 async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None):
     if not track_meta:

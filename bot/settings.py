@@ -35,6 +35,9 @@ class BotSettings:
         alb_art, _ = set_db.get_variable('ALBUM_ART_POST') #bool
         self.alb_art = True if alb_art else False
 
+        link_option, _ = set_db.get_variable('RCLONE_LINK_OPTIONS') #str
+        self.link_options = link_option if self.rclone and link_option else 'False'
+
         self.clients = []
 
     def check_upload_mode(self):
@@ -54,9 +57,9 @@ class BotSettings:
             self.rclone = False
             
         db_upload, _ = set_db.get_variable('UPLOAD_MODE')
-        if self.rclone and db_upload == 'rclone':
+        if self.rclone and db_upload == 'RCLONE':
             self.upload_mode = 'RCLONE'
-        elif db_upload:
+        elif db_upload == 'Telegram' or db_upload == 'Local':
             self.upload_mode = db_upload
         else:
             self.upload_mode = 'Local'
@@ -68,6 +71,9 @@ class BotSettings:
                 await qobuz_api.login()
                 self.qobuz = qobuz_api
                 self.clients.append(qobuz_api)
+                quality, _ = set_db.get_variable("QOBUZ_QUALITY")
+                if quality:
+                    bot_set.qobuz.quality = int(quality)
             except Exception as e:
                 LOGGER.error(e)
     

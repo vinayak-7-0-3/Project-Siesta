@@ -12,10 +12,14 @@ SETTINGS VARS
 
 AUTH_CHATS - Chats where bot is allowed (str)
 AUTH_USERS - Users who can use bot (str)
-UPLOAD_MODE - rclone/tg (str)
-ANTI_SPAM - OFF/CHAT+/USER (str)
-BOT_PUBLIC - True/False (bool)
+UPLOAD_MODE - RCLONE|Telegram|Local (str)
+ANTI_SPAM - OFF|CHAT+|USER (str)
+BOT_PUBLIC - True|False (bool)
 BOT_LANGUAGE - (str) ISO 639-1 Codes Only
+ALBUM_ART_POST - True|False (bool)
+RCLONE_LINK_OPTIONS - False|RCLONE|Index|Both (str)
+
+QOBUZ_QUALITY - (int)
 """
 
 class BotSettings(DataBaseHandle):

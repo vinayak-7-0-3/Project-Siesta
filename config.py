@@ -51,11 +51,13 @@ class Config(object):
     TRACK_NAME_FORMAT = getenv("TRACK_NAME_FORMAT", "{title} - {artist}")
 #--------------------
 
-# RCLONE
+# RCLONE / INDEX
 
 #--------------------
     RCLONE_CONFIG = getenv("RCLONE_CONFIG", None)
+    # No trailing slashes '/' for both index and rclone_dest
     RCLONE_DEST = getenv("RCLONE_DEST", 'remote:newfolder')
+    INDEX_LINK = getenv('INDEX_LINK', None)
 #--------------------
 
 # QOBUZ

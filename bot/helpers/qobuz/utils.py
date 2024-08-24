@@ -37,6 +37,7 @@ async def get_track_metadata(item_id):
     metadata['date'] = q_meta['release_date_original']
     metadata['totaltracks'] = q_meta['album']['tracks_count']
     metadata['provider'] = 'Qobuz'
+    metadata['type'] = 'track'
 
     return metadata, None  
         
@@ -62,6 +63,7 @@ async def get_album_metadata(item_id):
     metadata['explicit'] = q_meta['parental_warning']
     metadata['provider'] = 'Qobuz'
     metadata['tracks'] = await get_track_meta_from_alb(q_meta, metadata)
+    metadata['type'] = 'album'
 
     return metadata, None
 
@@ -79,6 +81,7 @@ async def get_track_meta_from_alb(q_meta:dict, alb_meta):
         metadata['isrc'] = track['isrc']
         metadata['tracknumber'] = track['track_number']
         metadata['tracks'] = ''
+        metadata['type'] = 'track'
         tracks.append(metadata)
     return tracks
 
@@ -214,11 +217,6 @@ def smart_discography_filter(
 
     return items
 
-async def post_album_art(user:dict, meta:dict):
-    if bot_set.alb_art:
-        caption = await format_string(lang.ALBUM_TEMPLATE, meta, user)
-        msg = await send_message(user, meta['cover'], 'pic', caption)
-        return msg
     
 async def get_quality(meta:dict):
     """

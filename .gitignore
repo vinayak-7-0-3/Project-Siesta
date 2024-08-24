@@ -154,3 +154,4 @@ cython_debug/
 *.session-journal
 DOWNLOADS
 *.conf
+.vscode

@@ -7,7 +7,17 @@ class EN(object):
 #----------------
     WELCOME_MSG = "Hello {}"
     DOWNLOADING = 'Downloading........'
-    DOWNLOAD_PROGRESS = 'Downloading {} of {}'
+    DOWNLOAD_PROGRESS = """
+<b>╭─ Progress
+│
+├ {0}
+│
+├ Done : <code>{1} / {2}</code>
+│
+├ Title : <code>{3}</code>
+│
+╰─ Type : <code>{4}</code></b>
+"""
     UPLOADING = 'Uploading........'
     TASK_COMPLETED = "Download Finished"
 
@@ -56,7 +66,8 @@ Auth Chats : {4}
 
     QOBUZ_QUALITY_PANEL = '<b>Edit Qobuz Quality Here</b>'
 
-
+    RCLONE_LINK = 'Direct Link'
+    INDEX_LINK = 'Index Link'
 #----------------
 #
 # ERRORS
@@ -80,4 +91,10 @@ Auth Chats : {4}
 💫 <b>Quality :</b> {quality}
 📡 <b>Provider :</b> {provider}
 🔞 <b>Explicit :</b> {explicit}
+"""
+
+    SIMPLE_TITLE = """
+Name : {0}
+Type : {1}
+Provider : {2}
 """

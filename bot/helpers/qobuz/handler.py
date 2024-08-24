@@ -3,7 +3,7 @@ from config import Config
 
 from pathvalidate import sanitize_filepath
 
-from ..utils import download_file, run_concurrent_tasks, handle_upload
+from ..utils import *
 from ..metadata import set_metadata
 
 
@@ -38,10 +38,12 @@ async def start_album(item_id:int, user:dict):
 
     _, album_meta['quality'] = await get_quality(track_meta)
     
-    alb_post = await post_album_art(user, album_meta)
+    await post_album_art(user, album_meta)
 
-    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}/"
-
+    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}"
+    album_folder = sanitize_filepath(album_folder)
+    album_meta['folderpath'] = album_folder
+    
     # concurrent
     tasks = []
     for track in album_meta['tracks']:
@@ -51,20 +53,22 @@ async def start_album(item_id:int, user:dict):
     update_details = {
         'text': lang.DOWNLOAD_PROGRESS,
         'func': edit_message,
-        'param': user['bot_msg']
+        'msg': user['bot_msg'],
+        'title': album_meta['title'],
+        'type': album_meta['type']
     }
     await run_concurrent_tasks(tasks, update_details)
 
     # Upload
     await edit_message(user['bot_msg'], lang.UPLOADING)
-    await handle_upload(album_folder, True, album_meta['tracks'], user)
+    await handle_upload(True, album_meta, user)
 
 async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None):
     if not track_meta:
         track_meta, err = await get_track_metadata(item_id)
         if err:
             return await send_message(user, err)
-        filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}/"
+        filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
     else:
         filepath = basefolder
         
@@ -76,8 +80,9 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
         
     track_meta['extension'], track_meta['quality'] = await get_quality(raw_data)
 
+    # add filename to filepath
     filename = await format_string(Config.TRACK_NAME_FORMAT, track_meta, user)
-    filepath += f"{filename}.{track_meta['extension']}"
+    filepath += f"/{filename}.{track_meta['extension']}"
     filepath = sanitize_filepath(filepath)
     track_meta['filepath'] = filepath
 
@@ -89,7 +94,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
 
     if upload:
         await edit_message(user['bot_msg'], lang.UPLOADING)
-        await handle_upload(filepath, False, track_meta, user)
+        await handle_upload(False, track_meta, user)
 
     # Acknowledge task finished
     return True

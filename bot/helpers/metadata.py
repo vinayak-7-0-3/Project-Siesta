@@ -37,7 +37,10 @@ metadata = {
         'genre': '',
         'provider': '',
         'tracks': [],
-        'filepath': ''
+        'filepath': '',   # if track, full path to file
+        'folderpath': '', # if album/playlist the full path to folder
+        'message': None,  # Pyrogram message of post (if exist)
+        'type': ''        # track/album/playlist/artist
     }
 
 

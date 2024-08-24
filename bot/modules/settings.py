@@ -34,7 +34,7 @@ async def tg_cb(c, cb:CallbackQuery):
                 len(bot_set.auth_chats),
                 bot_set.upload_mode
             ),
-            markup=tg_button(bot_set.bot_public, bot_set.anti_spam, bot_set.alb_art, bot_set.upload_mode)
+            markup=tg_button()
         )
 
 
@@ -79,6 +79,21 @@ async def upload_mode_cb(client, cb:CallbackQuery):
         except:
             pass
 
+
+@Client.on_callback_query(filters.regex(pattern=r"^linkOption"))
+async def link_option_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        options = ['False', 'Index', 'RCLONE', 'Both']
+        current = options.index(bot_set.link_options)
+        nexti = (current + 1) % 4
+        bot_set.link_options = options[nexti]
+        set_db.set_variable('RCLONE_LINK_OPTIONS', options[nexti])
+        try:
+            await tg_cb(client, cb)
+        except:
+            pass
+
+
 @Client.on_callback_query(filters.regex(pattern=r"^albArt"))
 async def alb_art_cb(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
@@ -114,6 +129,7 @@ async def qobuz_quality_cb(c, cb:CallbackQuery):
         qobuz = {5:'MP3 320', 6:'Lossless', 7:'24B<=96KHZ',27:'24B>96KHZ'}
         to_set = cb.data.split('_')[1]
         bot_set.qobuz.quality = list(filter(lambda x: qobuz[x] == to_set, qobuz))[0]
+        set_db.set_variable('QOBUZ_QUALITY', bot_set.qobuz.quality)
         await qobuz_cb(c, cb)
 
 

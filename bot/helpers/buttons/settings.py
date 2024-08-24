@@ -39,11 +39,11 @@ def main_menu():
     inline_keyboard = inline_keyboard + exit_button
     return InlineKeyboardMarkup(inline_keyboard)
 
-def tg_button(bot_public, anti_spam, alb_art, upload):
+def tg_button():
     inline_keyboard = [
         [
             InlineKeyboardButton(
-                text=lang.BOT_PUBLIC.format(bot_public),
+                text=lang.BOT_PUBLIC.format(bot_set.bot_public),
                 callback_data='botPublic'
             )
         ],
@@ -55,23 +55,32 @@ def tg_button(bot_public, anti_spam, alb_art, upload):
         ],
         [
             InlineKeyboardButton(
-                text=lang.ANTI_SPAM.format(anti_spam),
+                text=lang.ANTI_SPAM.format(bot_set.anti_spam),
                 callback_data='antiSpam'
             )
         ],
         [
             InlineKeyboardButton(
-                text=lang.ALBUM_ART_BUT.format(alb_art),
+                text=lang.ALBUM_ART_BUT.format(bot_set.alb_art),
                 callback_data='albArt'
             )
         ],
         [
             InlineKeyboardButton(
-                text=f"Upload : {upload}",
+                text=f"Upload : {bot_set.upload_mode}",
                 callback_data='upload'
             )
         ]
     ]
+    if bot_set.rclone:
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=f"Return Link : {bot_set.link_options}",
+                    callback_data='linkOptions'
+                )
+            ]
+        )
     inline_keyboard = inline_keyboard + exit_button
     return InlineKeyboardMarkup(inline_keyboard)
 

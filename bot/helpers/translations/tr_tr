@@ -1,0 +1,100 @@
+class EN(object):
+
+#----------------
+#
+# TEMEL
+#
+#----------------
+    WELCOME_MSG = "Merhaba {}"
+    DOWNLOADING = 'İndiriliyor........'
+    DOWNLOAD_PROGRESS = """
+<b>╭─ İlerleme
+│
+├ {0}
+│
+├ Tamamlandı : <code>{1} / {2}</code>
+│
+├ Başlık : <code>{3}</code>
+╰─ Tür : <code>{4}</code></b>
+"""
+    UPLOADING = 'Yukleniyor........'3,
+    
+    TASK_COMPLETED = "Indirme Tamamlandı"
+
+
+
+
+#----------------
+#
+# SETTINGS PANEL
+#
+#----------------
+    INIT_SETTINGS_PANEL = '<b>Bot Ayarlarına Hoş Geldiniz</b>'
+
+    TELEGRAM_PANEL = """
+<b>Telegram Ayarları</b>
+
+Adminler : {2}
+Yetkili Kullanıcılar : {3}
+Yetkili Sohbetler : {4}
+"""
+    BAN_AUTH_FORMAT = '/komut {userid} kullan'
+    BAN_ID = '{} kaldırıldı'
+    USER_DOEST_EXIST = "Bu ID mevcut değil"
+    USER_EXIST = 'Bu ID zaten mevcut'
+    AUTH_ID = 'Başarıyla Yetkilendirildi'
+
+
+
+
+
+#----------------
+#
+# BUTTONS
+#
+#----------------
+    MAIN_MENU_BUTTON = 'ANA MENÜ'
+    CLOSE_BUTTON = 'KAPAT'
+    TELEGRAM = 'Telegram'
+    QOBUZ = 'Qobuz'
+    DEEZER = 'Deezer'
+    BOT_PUBLIC = 'Bot Herkese Açık - {}'
+    BOT_LANGUAGE = 'Dil'
+    ANTI_SPAM = 'Anti Spam - {}'
+
+    ALBUM_ART_BUT = "Albüm Kapağı : {}"
+
+    QOBUZ_QUALITY_PANEL = '<b>Qobuz Kalitesini Burada Düzenleyin</b>'
+
+    RCLONE_LINK = 'Direct Link'
+    INDEX_LINK = 'Index Link'
+#----------------
+#
+# ERRORS
+#
+#----------------
+    ERR_NO_LINK = 'Bağlantı bulunamadı :('
+    ERR_LINK_RECOGNITION = "Üzgünüm, verilen bağlantıyı tanıyamadım."
+    ERR_QOBUZ_NOT_STREAMABLE = "Bu parça/album indirilemez."
+
+#----------------
+#
+# TRACK & ALBUM POSTS
+#
+#----------------
+    ALBUM_TEMPLATE = """
+🎶 <b>Başlık :</b> {title}
+👤 <b>Sanatçı :</b> {artist}
+📅 <b>Çıkış Tarihi :</b> {date}
+🔢 <b>Total Şarkı :</b> {totaltracks}
+📀 <b>Total Bölümler :</b> {totalvolume}
+💫 <b>Kalite :</b> {quality}
+📡 <b>Platform :</b> {provider}
+🔞 <b>Yaş Sınırı :</b> {explicit}
+"""
+
+    SIMPLE_TITLE = """
+Ad : {0}
+Tip : {1}
+Platform : {2}
+"""

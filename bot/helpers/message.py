@@ -129,7 +129,12 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
         )
         
     elif itype == 'doc':
-        pass
+        msg = await aio.send_document(
+            chat_id=chat_id,
+            document=item,
+            caption=caption,
+            reply_to_message_id=user['r_id']
+        )
 
     elif itype == 'audio':
         msg = await aio.send_audio(

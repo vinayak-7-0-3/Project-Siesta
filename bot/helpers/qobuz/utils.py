@@ -11,14 +11,20 @@ from bot.settings import bot_set
 
 
 
-async def get_track_metadata(item_id):
-    raw_meta = await qobuz_api.get_track_url(item_id)
-    if "sample" not in raw_meta and raw_meta.get('sampling_rate'):
-        q_meta = await qobuz_api.get_track_meta(item_id)
-        if not q_meta.get('streamable'):
+async def get_track_metadata(item_id, q_meta=None):
+    """
+    Args:
+        item_id : track id
+        q_meta : raw metadata from qobuz (pre-fetched)
+    """
+    if q_meta is None:
+        raw_meta = await qobuz_api.get_track_url(item_id)
+        if "sample" not in raw_meta and raw_meta.get('sampling_rate'):
+            q_meta = await qobuz_api.get_track_meta(item_id)
+            if not q_meta.get('streamable'):
+                return None, lang.ERR_QOBUZ_NOT_STREAMABLE
+        else:
             return None, lang.ERR_QOBUZ_NOT_STREAMABLE
-    else:
-        return None, lang.ERR_QOBUZ_NOT_STREAMABLE
     
     metadata = base_meta.copy()
     metadata['itemid'] = item_id
@@ -69,7 +75,7 @@ async def get_album_metadata(item_id):
 
 async def get_track_meta_from_alb(q_meta:dict, alb_meta):
     """
-    q_meta : raw metadata from qobuz(album)
+    q_meta : raw metadata from qobuz (album)
     alb_meta : Sorted metadata (album)
     """
     tracks = []
@@ -84,6 +90,36 @@ async def get_track_meta_from_alb(q_meta:dict, alb_meta):
         metadata['type'] = 'track'
         tracks.append(metadata)
     return tracks
+
+
+async def get_playlist_meta(raw_meta, tracks):
+    """
+    Args:
+        raw_meta : raw metadata of playlist from qobuz
+        tracks : list of tracks (raw metadata)
+    """
+    metadata = base_meta.copy()
+    metadata['title'] = raw_meta['name']
+    metadata['duration'] = raw_meta['duration']
+    metadata['totaltracks'] = raw_meta['tracks_count']
+    metadata['itemid'] = raw_meta['id']
+    metadata['type'] = 'playlist'
+    
+    for track in tracks:
+        track_meta, _ = await get_track_metadata(track['id'], track)
+        metadata['tracks'].append(track_meta)
+    return metadata
+
+async def get_artist_meta(artist_raw):
+    """
+    Args:
+        artist_raw : raw metadata of artist from qobuz
+    """
+    metadata = base_meta.copy()
+    metadata['title'] = artist_raw['name']
+    metadata['type'] = 'artist'
+    metadata['provider'] = 'Qobuz'
+    return metadata
 
 async def get_artists_name(meta):
     artists = []
@@ -121,7 +157,8 @@ async def check_type(url):
 
     content = None
     if type_dict["func"]:
-        content = [item for item in await type_dict["func"](item_id)]
+        res = await type_dict["func"](item_id)
+        content = [item for item in res]
 
         smart_discography = True
         if smart_discography and url_type == "artist":

@@ -45,6 +45,20 @@ def tg_button():
             InlineKeyboardButton(
                 text=lang.BOT_PUBLIC.format(bot_set.bot_public),
                 callback_data='botPublic'
+            ),
+            InlineKeyboardButton(
+                text=lang.ANTI_SPAM.format(bot_set.anti_spam),
+                callback_data='antiSpam'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=lang.POST_ART_BUT.format(bot_set.art_poster),
+                callback_data='albArt'
+            ),
+            InlineKeyboardButton(
+                text=f"Upload : {bot_set.upload_mode}",
+                callback_data='upload'
             )
         ],
         [
@@ -55,22 +69,22 @@ def tg_button():
         ],
         [
             InlineKeyboardButton(
-                text=lang.ANTI_SPAM.format(bot_set.anti_spam),
-                callback_data='antiSpam'
+                text=lang.PLAYLIST_CONC_BUT.format(bot_set.playlist_conc),
+                callback_data='playCONC'
             )
         ],
         [
             InlineKeyboardButton(
-                text=lang.ALBUM_ART_BUT.format(bot_set.alb_art),
-                callback_data='albArt'
+                text=lang.ARTIST_BATCH_BUT.format(bot_set.artist_batch),
+                callback_data='artBATCH'
             )
         ],
         [
             InlineKeyboardButton(
-                text=f"Upload : {bot_set.upload_mode}",
-                callback_data='upload'
+                text=lang.SORT_PLAYLIST.format(bot_set.playlist_sort),
+                callback_data='sortPlay'
             )
-        ]
+        ],
     ]
     if bot_set.rclone:
         inline_keyboard.append(

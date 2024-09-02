@@ -96,70 +96,62 @@ async def run_concurrent_tasks(tasks, update=None):
 
 
 
-async def handle_upload(batch=False, metadata=None, user=None):
+async def rclone_upload(user, realpath):
     """
     Args:
-        batch: (bool)
-        metadata: full metadata
+        user: user details
+        realpath: full path to (not used for uploading)
+    Returns:
+        rclone_link, index_link
     """
-    # metadata contains filepath(if single file) and folderpath(if batch)
-    # rclone will not upload the given folder (but files/folder inside the given folder)
     path = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/"
-    link_button = None
-
-    # just move the folders to local path provided
-    if bot_set.upload_mode == 'Local':
-        to_move = path + metadata['provider']
-        shutil.move(to_move, Config.LOCAL_STORAGE)
-        return
-    
-    if batch:
-        if bot_set.upload_mode == 'Telegram':
-            for track in metadata['tracks']:
-                thumb = track['filepath'].replace(track['extension'], 'jpg')
-                await download_file(track['thumbnail'], thumb)
-                await send_message(user, track['filepath'], 'audio', thumb=thumb, meta=track)
-        else:
-            await run_rclone_upload(path)
-            link_button = await create_link_markup(metadata['folderpath'], path)
-    else:
-        if bot_set.upload_mode == 'Telegram':
-            thumb = metadata['filepath'].replace(metadata['extension'], "jpg")
-            await download_file(metadata['thumbnail'], thumb)
-            await send_message(user, metadata['filepath'], 'audio', thumb=thumb, meta=metadata)
-        else:
-            await run_rclone_upload(path)
-            link_button = await create_link_markup(metadata['filepath'], path)
-
-    # send/edit message with link
-    # only works for rclone uploads
-    if link_button:
-        if bot_set.alb_art and metadata['message']:
-                await post_album_art(user, metadata, True, link_button)
-        else:
-            await send_message(
-                user, 
-                lang.SIMPLE_TITLE.format(
-                    metadata['title'],
-                    metadata['type'].title(),
-                    metadata['provider']
-                ),
-                markup=link_button
-            )
-
-async def run_rclone_upload(to_upload):
-    cmd = f'rclone copy --config ./rclone.conf "{to_upload}" "{Config.RCLONE_DEST}"'
+    cmd = f'rclone copy --config ./rclone.conf "{path}" "{Config.RCLONE_DEST}"'
     task = await asyncio.create_subprocess_shell(cmd)
     await task.wait()
+    r_link, i_link = await create_link(realpath, Config.DOWNLOAD_BASE_DIR + f"/{user['r_id']}/")
+    return r_link, i_link
 
 
-async def create_link_markup(path, basepath):
+async def local_upload(metadata, user):
+    path = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/"
+    to_move = path + metadata['provider']
+    shutil.move(to_move, Config.LOCAL_STORAGE)
+
+
+async def init_telegram_upload(metadata, user, batch=False):
+    """
+    Set up telegram to upload only a single track at once
+    Args:
+        metadata: full metadata
+        user: user details
+        batch: (bool) whether to upload multiple tracks
+    """
+    if batch:
+        if metadata['type'] == 'album':
+            for track in metadata['tracks']:
+                await telegram_upload(track, user)
+        elif metadata['type'] == 'artist':
+            for album in metadata['albums']:
+                for track in album['tracks']:
+                    await telegram_upload(track, user)
+    else:
+        await telegram_upload(metadata, user)
+
+# simple single track upload
+async def telegram_upload(track, user):
+    thumb = track['filepath'].replace(track['extension'], 'jpg')
+    await download_file(track['thumbnail'], thumb)
+    await send_message(user, track['filepath'], 'audio', thumb=thumb, meta=track)
+
+
+async def create_link(path, basepath):
     """
     Args:
         path: full real path
         basepath: to remove bot folder from real path (DOWNLOADS/r_id/)
     Returns:
-        InlineKeyboardMarkup
+        rclone_link: link from rclone
+        index_link: index link if enabled
     """
     path = str(Path(path).relative_to(basepath))
 
@@ -185,14 +177,22 @@ async def create_link_markup(path, basepath):
         if Config.INDEX_LINK:
             index_link =  Config.INDEX_LINK + '/' + quote(path)
 
-    if rclone_link or index_link:
-        return links_button(rclone_link, index_link)
-    else:
-        return None
+    return rclone_link, index_link
 
 
+async def zip_folder(folderpath):
+    """
+    Args:
+        folderpath: to zip
+    Returns:
+        path to zip file
+    """
+    zip_path = f"{folderpath}.zip"
+    shutil.make_archive(folderpath, 'zip', folderpath)
+    return zip_path
 
-async def post_album_art(user:dict, meta:dict, edit=False, markup=None):
+
+async def post_art_poster(user:dict, meta:dict, edit=False, markup=None):
     """
     Args:
         edit: whether to edit existing post
@@ -200,13 +200,45 @@ async def post_album_art(user:dict, meta:dict, edit=False, markup=None):
     Returns:
         Message
     """
-    caption = await format_string(lang.ALBUM_TEMPLATE, meta, user)
+    if meta['type'] == 'album':
+        caption = await format_string(lang.ALBUM_TEMPLATE, meta, user)
+        photo = meta['cover']
+    else:
+        caption = await format_string(lang.PLAYLIST_TEMPLATE, meta, user)
+        photo = "./project-siesta.png"
+    
     if edit:
-        return await edit_message(meta['message'], caption, markup)
-    if bot_set.alb_art:
-        msg = await send_message(user, meta['cover'], 'pic', caption)
-        meta['message'] = msg
+        return await edit_message(meta['poster_msg'], caption, markup)
+    if bot_set.art_poster:
+        msg = await send_message(user, photo, 'pic', caption)
+        return msg
 
+
+async def post_simple_message(user, meta, r_link=None, i_link=None):
+    """
+    Sends a simple message of item with button
+    Args:
+        user: user details
+        meta: metadata
+        markup: buttons if needed
+    Returns:
+        Message
+    """
+    caption = await format_string(
+        lang.SIMPLE_TITLE.format(
+            meta['title'],
+            meta['type'].title(),
+            meta['provider']
+        ), 
+        meta, 
+        user
+    )
+    markup = links_button(r_link, i_link)
+    if meta['type'] == 'album':
+        if meta['poster_msg']:
+            await post_art_poster(user, meta, True, markup)
+    else:
+        await send_message(user, caption, markup=markup)
 
 
 async def progress_message(done, total, details):

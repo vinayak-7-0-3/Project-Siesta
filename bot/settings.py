@@ -21,6 +21,7 @@ class BotSettings:
         db_chats, _ = set_db.get_variable('AUTH_CHATS')
         self.auth_chats = json.loads(db_chats) if db_chats else []
 
+        self.rclone = False
         self.check_upload_mode()
 
         spam, _ = set_db.get_variable('ANTI_SPAM') #bool
@@ -32,11 +33,27 @@ class BotSettings:
         lang, _ = set_db.get_variable('BOT_LANGUAGE') #str
         self.bot_lang = lang if lang else 'en'
 
-        alb_art, _ = set_db.get_variable('ALBUM_ART_POST') #bool
-        self.alb_art = True if alb_art else False
+        art_poster, _ = set_db.get_variable('ART_POSTER') #bool
+        self.art_poster = True if art_poster else False
 
+        playlist_sort, _ = set_db.get_variable("PLAYLIST_SORT")
+        self.playlist_sort = playlist_sort if playlist_sort else False
+
+        # Multithreaded downloads
+        artist_batch, _ = set_db.get_variable("ARTIST_BATCH_UPLOAD")
+        self.artist_batch = artist_batch if artist_batch else False
+        playlist_conc, _ = set_db.get_variable("PLAYLIST_CONCURRENT")
+        self.playlist_conc = playlist_conc if playlist_conc else False 
+        
         link_option, _ = set_db.get_variable('RCLONE_LINK_OPTIONS') #str
         self.link_options = link_option if self.rclone and link_option else 'False'
+
+        #TODO
+        self.album_sep_zip = False #For artists download
+        self.album_zip = False
+        self.playlist_zip = False
+        self.artist_zip = False
+
 
         self.clients = []
 
@@ -52,9 +69,7 @@ class BotSettings:
                 else:
                     with open('rclone.conf', 'wb') as f:
                         f.write(rclone.content)
-                    self.rclone=True
-        else:
-            self.rclone = False
+                    self.rclone = True
             
         db_upload, _ = set_db.get_variable('UPLOAD_MODE')
         if self.rclone and db_upload == 'RCLONE':

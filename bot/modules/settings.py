@@ -97,11 +97,52 @@ async def link_option_cb(client, cb:CallbackQuery):
 @Client.on_callback_query(filters.regex(pattern=r"^albArt"))
 async def alb_art_cb(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
-        alb_art = bot_set.alb_art
-        alb_art = False if alb_art else True
-        bot_set.alb_art = alb_art
-        set_db.set_variable('ALBUM_ART_POST', alb_art)
-        await tg_cb(client, cb)
+        art_post = bot_set.art_poster
+        art_post = False if art_post else True
+        bot_set.art_poster = art_post
+        set_db.set_variable('ART_POSTER', art_post)
+        try:
+            await tg_cb(client, cb)
+        except:
+            pass
+
+@Client.on_callback_query(filters.regex(pattern=r"^playCONC"))
+async def playlist_conc_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        play_conc = bot_set.playlist_conc
+        play_conc = False if play_conc else True
+        bot_set.playlist_conc = play_conc
+        set_db.set_variable('PLAYLIST_CONCURRENT', play_conc)
+        try:
+            await tg_cb(client, cb)
+        except:
+            pass
+
+@Client.on_callback_query(filters.regex(pattern=r"^artBATCH"))
+async def artist_conc_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        artist_batch = bot_set.artist_batch
+        artist_batch = False if artist_batch else True
+        bot_set.artist_batch = artist_batch
+        set_db.set_variable('ARTIST_BATCH_UPLOAD', artist_batch)
+        try:
+            await tg_cb(client, cb)
+        except:
+            pass
+
+@Client.on_callback_query(filters.regex(pattern=r"^sortPlay"))
+async def playlist_sort_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        sort = bot_set.playlist_sort
+        sort = False if sort else True
+        bot_set.playlist_sort = sort
+        set_db.set_variable('PLAYLIST_SORT', sort)
+        try:
+            await tg_cb(client, cb)
+        except:
+            pass
+
+
 
 #--------------------
 

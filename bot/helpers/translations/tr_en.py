@@ -19,6 +19,7 @@ class EN(object):
 ╰─ Type : <code>{4}</code></b>
 """
     UPLOADING = 'Uploading........'
+    ZIPPING = 'Zipping........'
     TASK_COMPLETED = "Download Finished"
 
 
@@ -62,7 +63,12 @@ Auth Chats : {4}
     BOT_LANGUAGE = 'Language'
     ANTI_SPAM = 'Anit Spam - {}'
 
-    ALBUM_ART_BUT = "Album Art : {}"
+    POST_ART_BUT = "Art Poster : {}"
+
+    SORT_PLAYLIST = 'Sort Playlist : {}'
+
+    PLAYLIST_CONC_BUT = "Playlist Concurrent : {}"
+    ARTIST_BATCH_BUT = 'Artist Batch Upload : {}'
 
     QOBUZ_QUALITY_PANEL = '<b>Edit Qobuz Quality Here</b>'
 
@@ -91,6 +97,13 @@ Auth Chats : {4}
 💫 <b>Quality :</b> {quality}
 📡 <b>Provider :</b> {provider}
 🔞 <b>Explicit :</b> {explicit}
+"""
+
+    PLAYLIST_TEMPLATE = """
+🎶 <b>Title :</b> {title}
+🔢 <b>Total Tracks :</b> {totaltracks}
+💫 <b>Quality :</b> {quality}
+📡 <b>Provider :</b> {provider}
 """
 
     SIMPLE_TITLE = """

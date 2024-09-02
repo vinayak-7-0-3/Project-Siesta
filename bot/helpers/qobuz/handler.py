@@ -1,3 +1,4 @@
+import shutil
 from .utils import *
 from config import Config
 
@@ -10,15 +11,12 @@ from ..metadata import set_metadata
 async def start_qobuz(url:str, user:dict):
     items, item_id, type_dict, content = await check_type(url)
     if items:
-        # FOR ARTIST/LABEL
+        # FOR ARTIST
         if type_dict['iterable_key'] == 'albums':
-                for item in items:
-                    await start_album(item['id'], user)
+                await start_artist(items, user, content)
         else:
         # FOR PLAYLIST 
-            for item in items:
-                pass
-                #await self.startTrack(item['id'], user)
+            await start_playlist(items, content, user)
     else:
         # FOR ALBUM
         if type_dict["album"]:
@@ -28,7 +26,7 @@ async def start_qobuz(url:str, user:dict):
             await start_track(item_id, user, None)
 
 
-async def start_album(item_id:int, user:dict):
+async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     album_meta, err = await get_album_metadata(item_id)
     if err:
         return await send_message(user, err)
@@ -38,9 +36,14 @@ async def start_album(item_id:int, user:dict):
 
     _, album_meta['quality'] = await get_quality(track_meta)
     
-    await post_album_art(user, album_meta)
+    # for convenience, do not post album poster if artist
+    if upload:
+        album_meta['poster_msg'] = await post_art_poster(user, album_meta)
 
-    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}"
+    if basefolder:
+        album_folder = basefolder + f"/{album_meta['title']}"
+    else:
+        album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}"
     album_folder = sanitize_filepath(album_folder)
     album_meta['folderpath'] = album_folder
     
@@ -59,11 +62,33 @@ async def start_album(item_id:int, user:dict):
     }
     await run_concurrent_tasks(tasks, update_details)
 
-    # Upload
-    await edit_message(user['bot_msg'], lang.UPLOADING)
-    await handle_upload(True, album_meta, user)
+    if bot_set.album_zip:
+        await edit_message(user['bot_msg'], lang.ZIPPING)
+        album_meta['folderpath'] = await zip_folder(album_meta['folderpath'])
 
-async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None):
+    # Upload
+    if upload:
+        await edit_message(user['bot_msg'], lang.UPLOADING)
+
+        if bot_set.upload_mode == 'Local':
+            await local_upload(album_meta, user)
+            
+        elif bot_set.upload_mode == 'Telegram':
+            if bot_set.album_zip:
+                await send_message(user, album_meta['folderpath'], 'doc', caption=album_meta['title'])
+            else:
+                await init_telegram_upload(album_meta, user, True)
+        else:
+            rclone_link, index_link = await rclone_upload(user, album_meta['folderpath'])
+            await post_simple_message(user, album_meta, rclone_link, index_link)
+    
+    if bot_set.album_zip:
+        os.remove(album_meta['folderpath'])
+    else:
+        shutil.rmtree(album_meta['folderpath'])
+
+
+async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None, disable_link=False):
     if not track_meta:
         track_meta, err = await get_track_metadata(item_id)
         if err:
@@ -94,7 +119,76 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
 
     if upload:
         await edit_message(user['bot_msg'], lang.UPLOADING)
-        await handle_upload(False, track_meta, user)
-
+        if bot_set.upload_mode == 'Local':
+            await local_upload(track_meta, user)
+        elif bot_set.upload_mode == 'Telegram':
+            await telegram_upload(track_meta, user)
+        else:
+            rclone_link, index_link = await rclone_upload(user, track_meta['filepath'])
+            if not disable_link:
+                await post_simple_message(user, track_meta, rclone_link, index_link)
+        os.remove(filepath) # save space
+            
     # Acknowledge task finished
     return True
+
+
+
+
+async def start_artist(albums, user, artist):
+    artist_meta = await get_artist_meta(artist[0])
+    artist_meta['folderpath'] = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/Qobuz/{artist[0]['name']}"
+    artist_meta['folderpath'] = sanitize_filepath(artist_meta['folderpath'])
+
+    upload_album = True
+    if bot_set.artist_batch:
+        # for telegram, batch upload is not needed
+        upload_album = True if bot_set.upload_mode == 'Telegram' else False
+    if bot_set.artist_zip:
+        upload_album = False # final decision
+
+    for album in albums:
+        await start_album(album['id'], user, upload_album, artist_meta['folderpath'])
+
+    # now upload artist folder as a whole
+    if not upload_album:
+        if bot_set.artist_zip:
+            await edit_message(user['bot_msg'], lang.ZIPPING)
+            artist_meta['folderpath'] = await zip_folder(artist_meta['folderpath'])
+        await edit_message(user['bot_msg'], lang.UPLOADING)
+
+        if bot_set.upload_mode == 'Local':
+            await local_upload(artist_meta['folderpath'], user)
+        elif bot_set.upload_mode == 'Telegram':
+            if bot_set.artist_zip:
+                await send_message(user, artist_meta['folderpath'], 'doc', caption=artist[0]['name'])
+        else:
+            rclone_link, index_link = await rclone_upload(user, artist_meta['folderpath'])
+            await post_simple_message(user, artist_meta, rclone_link, index_link)
+        
+        if bot_set.artist_zip:
+            os.remove(artist_meta['folderpath'])
+        else:
+            shutil.rmtree(artist_meta['folderpath'])
+
+
+
+async def start_playlist(tracks, playlist, user):
+    play_meta = await get_playlist_meta(playlist, tracks)
+    
+    playlist_folder = None
+    if not bot_set.playlist_sort:
+        playlist_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{play_meta['title']}"
+        playlist_folder = sanitize_filepath(playlist_folder)
+    play_meta['folderpath'] = playlist_folder
+    
+    # Get user quality by doing a track request
+    track_meta = await qobuz_api.get_track_url(tracks[0]['id'])
+    _, play_meta['quality'] = await get_quality(track_meta)
+
+    
+    if bot_set.playlist_conc:
+        tasks = []
+        for track in play_meta['tracks']:
+            tasks.append(start_track(track['itemid'], user, track, True, playlist_folder, True))
+            

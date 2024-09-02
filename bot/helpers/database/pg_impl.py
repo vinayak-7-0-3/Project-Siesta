@@ -16,8 +16,11 @@ UPLOAD_MODE - RCLONE|Telegram|Local (str)
 ANTI_SPAM - OFF|CHAT+|USER (str)
 BOT_PUBLIC - True|False (bool)
 BOT_LANGUAGE - (str) ISO 639-1 Codes Only
-ALBUM_ART_POST - True|False (bool)
+ART_POSTER - True|False (bool)
 RCLONE_LINK_OPTIONS - False|RCLONE|Index|Both (str)
+PLAYLIST_SORT - (bool)
+ARTIST_BATCH_UPLOAD - (bool)
+PLAYLIST_CONCURRENT - (bool)
 
 QOBUZ_QUALITY - (int)
 """

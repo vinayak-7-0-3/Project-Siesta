@@ -82,10 +82,10 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
             rclone_link, index_link = await rclone_upload(user, album_meta['folderpath'])
             await post_simple_message(user, album_meta, rclone_link, index_link)
     
-    if bot_set.album_zip:
-        os.remove(album_meta['folderpath'])
-    else:
-        shutil.rmtree(album_meta['folderpath'])
+        if bot_set.album_zip:
+            os.remove(album_meta['folderpath'])
+        else:
+            shutil.rmtree(album_meta['folderpath'])
 
 
 async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=True, basefolder=None, disable_link=False):

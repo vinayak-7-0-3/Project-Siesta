@@ -33,11 +33,16 @@ class BotSettings:
         lang, _ = set_db.get_variable('BOT_LANGUAGE') #str
         self.bot_lang = lang if lang else 'en'
 
+        # post photo of album/artist
         art_poster, _ = set_db.get_variable('ART_POSTER') #bool
         self.art_poster = True if art_poster else False
 
         playlist_sort, _ = set_db.get_variable("PLAYLIST_SORT")
         self.playlist_sort = playlist_sort if playlist_sort else False
+        # disable returning links for sorted playlist for cleaner chat
+        disable_sort_link, _ = set_db.get_variable("PLAYLIST_LINK_DISABLE")
+        #self.disable_sort_link = disable_sort_link if disable_sort_link else False
+        self.disable_sort_link = True
 
         # Multithreaded downloads
         artist_batch, _ = set_db.get_variable("ARTIST_BATCH_UPLOAD")

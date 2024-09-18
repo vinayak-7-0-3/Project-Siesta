@@ -21,6 +21,7 @@ RCLONE_LINK_OPTIONS - False|RCLONE|Index|Both (str)
 PLAYLIST_SORT - (bool)
 ARTIST_BATCH_UPLOAD - (bool)
 PLAYLIST_CONCURRENT - (bool)
+PLAYLIST_LINK_DISABLE - Disable links for sorted playlist (bool)
 
 QOBUZ_QUALITY - (int)
 """

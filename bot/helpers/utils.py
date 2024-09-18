@@ -118,24 +118,20 @@ async def local_upload(metadata, user):
     shutil.move(to_move, Config.LOCAL_STORAGE)
 
 
-async def init_telegram_upload(metadata, user, batch=False):
+async def init_telegram_upload(metadata, user):
     """
     Set up telegram to upload only a single track at once
     Args:
         metadata: full metadata
         user: user details
-        batch: (bool) whether to upload multiple tracks
     """
-    if batch:
-        if metadata['type'] == 'album':
-            for track in metadata['tracks']:
+    if metadata['type'] == 'album' or metadata['type'] == 'playlist':
+        for track in metadata['tracks']:
+            await telegram_upload(track, user)
+    elif metadata['type'] == 'artist':
+        for album in metadata['albums']:
+            for track in album['tracks']:
                 await telegram_upload(track, user)
-        elif metadata['type'] == 'artist':
-            for album in metadata['albums']:
-                for track in album['tracks']:
-                    await telegram_upload(track, user)
-    else:
-        await telegram_upload(metadata, user)
 
 # simple single track upload
 async def telegram_upload(track, user):

@@ -123,8 +123,11 @@ async def get_artist_meta(artist_raw):
 
 async def get_artists_name(meta):
     artists = []
-    for a in meta['artists']:
-        artists.append(a['name'])
+    try:
+        for a in meta['artists']:
+            artists.append(a['name'])
+    except:
+        artists.append(meta['artist']['name'])
     return ', '.join([str(artist) for artist in artists])
 
 

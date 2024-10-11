@@ -2,12 +2,15 @@ import os
 import json
 import requests
 
+import bot.helpers.translations as lang
+
 from config import Config
 from bot.logger import LOGGER
 
 from .helpers.database.pg_impl import set_db
 from .helpers.qobuz.qopy import qobuz_api
 from .helpers.deezer.dzapi import deezerapi
+from .helpers.translations import lang_available
 
 
 class BotSettings:
@@ -15,6 +18,8 @@ class BotSettings:
         self.deezer = False
         self.qobuz = False
         self.admins = Config.ADMINS
+
+        self.set_language()
 
         db_users, _ = set_db.get_variable('AUTH_USERS')
         self.auth_users = json.loads(db_users) if db_users else []
@@ -30,9 +35,6 @@ class BotSettings:
         public, _ = set_db.get_variable('BOT_PUBLIC') #bool
         self.bot_public = True if public else False
 
-        lang, _ = set_db.get_variable('BOT_LANGUAGE') #str
-        self.bot_lang = lang if lang else 'en'
-
         # post photo of album/artist
         art_poster, _ = set_db.get_variable('ART_POSTER') #bool
         self.art_poster = True if art_poster else False
@@ -41,8 +43,7 @@ class BotSettings:
         self.playlist_sort = playlist_sort if playlist_sort else False
         # disable returning links for sorted playlist for cleaner chat
         disable_sort_link, _ = set_db.get_variable("PLAYLIST_LINK_DISABLE")
-        #self.disable_sort_link = disable_sort_link if disable_sort_link else False
-        self.disable_sort_link = True
+        self.disable_sort_link = disable_sort_link if disable_sort_link else False
 
         # Multithreaded downloads
         artist_batch, _ = set_db.get_variable("ARTIST_BATCH_UPLOAD")
@@ -54,11 +55,13 @@ class BotSettings:
         self.link_options = link_option if self.rclone and link_option else 'False'
 
         #TODO
-        self.album_sep_zip = False #For artists download
-        self.album_zip = False
-        self.playlist_zip = False
-        self.artist_zip = False
-
+        #self.album_sep_zip = False #For artists download
+        album_zip,_ = set_db.get_variable('ALBUM_ZIP')
+        self.album_zip = album_zip if album_zip else False
+        playlist_zip,_ = set_db.get_variable('PLAYLIST_ZIP')
+        self.playlist_zip = playlist_zip if playlist_zip else False
+        artist_zip,_ = set_db.get_variable('ARTIST_ZIP')
+        self.artist_zip = artist_zip if artist_zip else False
 
         self.clients = []
 
@@ -110,5 +113,17 @@ class BotSettings:
                     except:pass
             else:
                 LOGGER.error('DEEZER : Check BF_SECRET and TRACK_URL_KEY')
+
+
+    def set_language(self):
+        db_lang, _ = set_db.get_variable('BOT_LANGUAGE') #str
+        self.bot_lang = db_lang if db_lang else 'en'
+
+        for item in lang_available:
+            if item.__language__ == self.bot_lang:
+                lang.s = item
+                break
+
+
 
 bot_set = BotSettings()

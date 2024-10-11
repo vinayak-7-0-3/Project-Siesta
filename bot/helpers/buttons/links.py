@@ -1,6 +1,5 @@
 from config import Config
-
-from ..translations import lang
+import bot.helpers.translations as lang
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 def links_button(rclone, index):
@@ -10,7 +9,7 @@ def links_button(rclone, index):
         inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=lang.RCLONE_LINK,
+                    text=lang.s.RCLONE_LINK,
                     url=rclone
                 )
             ]
@@ -21,7 +20,7 @@ def links_button(rclone, index):
             inline_keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text=lang.INDEX_LINK,
+                        text=lang.s.INDEX_LINK,
                         url=index
                     )
                 ]

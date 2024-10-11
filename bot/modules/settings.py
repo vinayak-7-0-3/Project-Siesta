@@ -2,64 +2,32 @@ from bot import CMD
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, Message
 
+import bot.helpers.translations as lang
+
 from ..settings import bot_set
-from ..helpers.translations import lang
 from ..helpers.buttons.settings import *
 from ..helpers.database.pg_impl import set_db
 from ..helpers.message import send_message, edit_message, check_user, fetch_user_details
+
+
 
 @Client.on_message(filters.command(CMD.SETTINGS))
 async def settings(c, message):
     if await check_user(message.from_user.id, restricted=True):
         user = await fetch_user_details(message)
-        await send_message(user, lang.INIT_SETTINGS_PANEL, markup=main_menu())
+        await send_message(user, lang.s.INIT_SETTINGS_PANEL, markup=main_menu())
 
 
-
-#--------------------
-
-# TELEGRAM SETTINGS
-
-#--------------------
-@Client.on_callback_query(filters.regex(pattern=r"^tgPanel"))
-async def tg_cb(c, cb:CallbackQuery):
+@Client.on_callback_query(filters.regex(pattern=r"^corePanel"))
+async def core_cb(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
         await edit_message(
-            cb.message, 
-            lang.TELEGRAM_PANEL.format(
-                bot_set.bot_public,
-                bot_set.bot_lang,
-                len(bot_set.admins),
-                len(bot_set.auth_users),
-                len(bot_set.auth_chats),
-                bot_set.upload_mode
-            ),
-            markup=tg_button()
+            cb.message,
+            lang.s.CORE_PANEL,
+            core_buttons()
         )
 
 
-@Client.on_callback_query(filters.regex(pattern=r"^botPublic"))
-async def bot_public_cb(client, cb:CallbackQuery):
-    if await check_user(cb.from_user.id, restricted=True):
-        bot_set.bot_public = False if bot_set.bot_public else True
-        set_db.set_variable('BOT_PUBLIC', bot_set.bot_public)
-        try:
-            await tg_cb(client, cb)
-        except:
-            pass
-
-@Client.on_callback_query(filters.regex(pattern=r"^antiSpam"))
-async def anti_spam_cb(client, cb:CallbackQuery):
-    if await check_user(cb.from_user.id, restricted=True):
-        anti = ['OFF', 'USER', 'CHAT+']
-        current = anti.index(bot_set.anti_spam)
-        nexti = (current + 1) % 3
-        bot_set.anti_spam = anti[nexti]
-        set_db.set_variable('ANTI_SPAM', anti[nexti])
-        try:
-            await tg_cb(client, cb)
-        except:
-            pass
 
 @Client.on_callback_query(filters.regex(pattern=r"^upload"))
 async def upload_mode_cb(client, cb:CallbackQuery):
@@ -75,7 +43,7 @@ async def upload_mode_cb(client, cb:CallbackQuery):
         bot_set.upload_mode = modes[nexti]
         set_db.set_variable('UPLOAD_MODE', modes[nexti])
         try:
-            await tg_cb(client, cb)
+            await core_cb(client, cb)
         except:
             pass
 
@@ -89,7 +57,7 @@ async def link_option_cb(client, cb:CallbackQuery):
         bot_set.link_options = options[nexti]
         set_db.set_variable('RCLONE_LINK_OPTIONS', options[nexti])
         try:
-            await tg_cb(client, cb)
+            await core_cb(client, cb)
         except:
             pass
 
@@ -102,7 +70,7 @@ async def alb_art_cb(client, cb:CallbackQuery):
         bot_set.art_poster = art_post
         set_db.set_variable('ART_POSTER', art_post)
         try:
-            await tg_cb(client, cb)
+            await core_cb(client, cb)
         except:
             pass
 
@@ -114,7 +82,7 @@ async def playlist_conc_cb(client, cb:CallbackQuery):
         bot_set.playlist_conc = play_conc
         set_db.set_variable('PLAYLIST_CONCURRENT', play_conc)
         try:
-            await tg_cb(client, cb)
+            await core_cb(client, cb)
         except:
             pass
 
@@ -126,7 +94,7 @@ async def artist_conc_cb(client, cb:CallbackQuery):
         bot_set.artist_batch = artist_batch
         set_db.set_variable('ARTIST_BATCH_UPLOAD', artist_batch)
         try:
-            await tg_cb(client, cb)
+            await core_cb(client, cb)
         except:
             pass
 
@@ -138,40 +106,61 @@ async def playlist_sort_cb(client, cb:CallbackQuery):
         bot_set.playlist_sort = sort
         set_db.set_variable('PLAYLIST_SORT', sort)
         try:
-            await tg_cb(client, cb)
+            await core_cb(client, cb)
         except:
             pass
 
 
-
-#--------------------
-
-# QOBUZ
-
-#--------------------
-
-@Client.on_callback_query(filters.regex(pattern=r"^qbP"))
-async def qobuz_cb(c, cb:CallbackQuery):
+@Client.on_callback_query(filters.regex(pattern=r"^playZip"))
+async def playlist_zip_cb(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
-        quality = {5:'MP3 320', 6:'Lossless', 7:'24B<=96KHZ',27:'24B>96KHZ'}
-        current = bot_set.qobuz.quality
-        quality[current] = quality[current] + '✅'
+        option = bot_set.playlist_zip
+        option = False if option else True
+        bot_set.playlist_zip = option
+        set_db.set_variable('PLAYLIST_ZIP', option)
         try:
-            await edit_message(
-                cb.message,
-                lang.QOBUZ_QUALITY_PANEL,
-                markup=qb_button(quality)
-            )
-        except:pass
+            await core_cb(client, cb)
+        except:
+            pass
 
-@Client.on_callback_query(filters.regex(pattern=r"^qbQ"))
-async def qobuz_quality_cb(c, cb:CallbackQuery):
+
+@Client.on_callback_query(filters.regex(pattern=r"^sortLinkPlay"))
+async def playlist_disable_zip_link(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
-        qobuz = {5:'MP3 320', 6:'Lossless', 7:'24B<=96KHZ',27:'24B>96KHZ'}
-        to_set = cb.data.split('_')[1]
-        bot_set.qobuz.quality = list(filter(lambda x: qobuz[x] == to_set, qobuz))[0]
-        set_db.set_variable('QOBUZ_QUALITY', bot_set.qobuz.quality)
-        await qobuz_cb(c, cb)
+        option = bot_set.disable_sort_link
+        option = False if option else True
+        bot_set.disable_sort_link = option
+        set_db.set_variable('PLAYLIST_LINK_DISABLE', option)
+        try:
+            await core_cb(client, cb)
+        except:
+            pass
+
+
+@Client.on_callback_query(filters.regex(pattern=r"^artZip"))
+async def artist_zip_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        option = bot_set.artist_zip
+        option = False if option else True
+        bot_set.artist_zip = option
+        set_db.set_variable('ARTIST_ZIP', option)
+        try:
+            await core_cb(client, cb)
+        except:
+            pass
+
+
+@Client.on_callback_query(filters.regex(pattern=r"^albZip"))
+async def album_zip_cb(client, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        option = bot_set.album_zip
+        option = False if option else True
+        bot_set.album_zip = option
+        set_db.set_variable('ALBUM_ZIP', option)
+        try:
+            await core_cb(client, cb)
+        except:
+            pass
 
 
 
@@ -184,7 +173,7 @@ async def qobuz_quality_cb(c, cb:CallbackQuery):
 async def main_menu_cb(client, cb:CallbackQuery):
     if await check_user(cb.from_user.id, restricted=True):
         try:
-            await edit_message(cb.message, lang.INIT_SETTINGS_PANEL, markup=main_menu())
+            await edit_message(cb.message, lang.s.INIT_SETTINGS_PANEL, markup=main_menu())
         except:
             pass
 
@@ -205,7 +194,7 @@ async def ban(client:Client, msg:Message):
         try:
             id = int(msg.text.split(" ", maxsplit=1)[1])
         except:
-            await send_message(msg, lang.BAN_AUTH_FORMAT)
+            await send_message(msg, lang.s.BAN_AUTH_FORMAT)
             return
 
         user = False if str(id).startswith('-100') else True
@@ -213,13 +202,13 @@ async def ban(client:Client, msg:Message):
             if id in bot_set.auth_users:
                 bot_set.auth_users.remove(id)
                 set_db.set_variable('AUTH_USERS', str(bot_set.auth_users))
-            else: await send_message(msg, lang.USER_DOEST_EXIST)
+            else: await send_message(msg, lang.s.USER_DOEST_EXIST)
         else:
             if id in bot_set.auth_chats:
                 bot_set.auth_chats.remove(id)
                 set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
-            else: await send_message(msg, lang.USER_DOEST_EXIST)
-        await send_message(msg, lang.BAN_ID)
+            else: await send_message(msg, lang.s.USER_DOEST_EXIST)
+        await send_message(msg, lang.s.BAN_ID)
         
 
 @Client.on_message(filters.command(CMD.AUTH))
@@ -228,7 +217,7 @@ async def auth(client:Client, msg:Message):
         try:
             id = int(msg.text.split(" ", maxsplit=1)[1])
         except:
-            await send_message(msg, lang.BAN_AUTH_FORMAT)
+            await send_message(msg, lang.s.BAN_AUTH_FORMAT)
             return
 
         user = False if str(id).startswith('-100') else True
@@ -236,10 +225,10 @@ async def auth(client:Client, msg:Message):
             if id not in bot_set.auth_users:
                 bot_set.auth_users.append(id)
                 set_db.set_variable('AUTH_USERS', str(bot_set.auth_users))
-            else: await send_message(msg, lang.USER_EXIST)
+            else: await send_message(msg, lang.s.USER_EXIST)
         else:
             if id not in bot_set.auth_chats:
                 bot_set.auth_chats.append(id)
                 set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
-            else: await send_message(msg, lang.USER_EXIST)
-        await send_message(msg, lang.AUTH_ID)
+            else: await send_message(msg, lang.s.USER_EXIST)
+        await send_message(msg, lang.s.AUTH_ID)

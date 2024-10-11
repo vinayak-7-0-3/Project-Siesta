@@ -4,6 +4,8 @@ import aiohttp
 import asyncio
 import shutil
 
+import bot.helpers.translations as lang
+
 from pathlib import Path
 from urllib.parse import quote
 
@@ -11,7 +13,6 @@ from config import Config
 
 from ..logger import LOGGER
 from ..settings import bot_set
-from .translations import lang
 from .buttons.links import links_button
 from .message import send_message, edit_message
 
@@ -197,10 +198,10 @@ async def post_art_poster(user:dict, meta:dict, edit=False, markup=None):
         Message
     """
     if meta['type'] == 'album':
-        caption = await format_string(lang.ALBUM_TEMPLATE, meta, user)
+        caption = await format_string(lang.s.ALBUM_TEMPLATE, meta, user)
         photo = meta['cover']
     else:
-        caption = await format_string(lang.PLAYLIST_TEMPLATE, meta, user)
+        caption = await format_string(lang.s.PLAYLIST_TEMPLATE, meta, user)
         photo = "./project-siesta.png"
     
     if edit:
@@ -221,7 +222,7 @@ async def post_simple_message(user, meta, r_link=None, i_link=None):
         Message
     """
     caption = await format_string(
-        lang.SIMPLE_TITLE.format(
+        lang.s.SIMPLE_TITLE.format(
             meta['title'],
             meta['type'].title(),
             meta['provider']

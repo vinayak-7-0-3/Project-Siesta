@@ -1,5 +1,5 @@
 class EN(object):
-
+    __language__ = 'en'
 #----------------
 #
 # BASICS
@@ -31,6 +31,9 @@ class EN(object):
 #
 #----------------
     INIT_SETTINGS_PANEL = '<b>Welcome to Bot Settings</b>'
+    LANGUAGE_PANEL = 'Select bot language here'
+    CORE_PANEL = 'Edit main settings here'
+    PROVIDERS_PANEL = 'Configure each platform seperartelty'
 
     TELEGRAM_PANEL = """
 <b>Telegram Settings</b>
@@ -56,7 +59,13 @@ Auth Chats : {4}
 #----------------
     MAIN_MENU_BUTTON = 'MAIN MENU'
     CLOSE_BUTTON = 'CLOSE'
+
     TELEGRAM = 'Telegram'
+    CORE = 'CORE'
+    PROVIDERS = 'PROVIDERS'
+
+    LANGUAGE = 'Language'
+    
     QOBUZ = 'Qobuz'
     DEEZER = 'Deezer'
     BOT_PUBLIC = 'Bot Public - {}'
@@ -66,9 +75,14 @@ Auth Chats : {4}
     POST_ART_BUT = "Art Poster : {}"
 
     SORT_PLAYLIST = 'Sort Playlist : {}'
+    DISABLE_SORT_LINK = 'Disable Sort Link : {}'
+    PLAYLIST_CONC_BUT = "Playlist Batch Upload : {}"
+    PLAYLIST_ZIP = 'Zip Playlist : {}'
 
-    PLAYLIST_CONC_BUT = "Playlist Concurrent : {}"
     ARTIST_BATCH_BUT = 'Artist Batch Upload : {}'
+    ARTIST_ZIP = 'Zip Artist : {}'
+
+    ALBUM_ZIP = 'Zip Album : {}'
 
     QOBUZ_QUALITY_PANEL = '<b>Edit Qobuz Quality Here</b>'
 
@@ -82,7 +96,7 @@ Auth Chats : {4}
     ERR_NO_LINK = 'No link found :('
     ERR_LINK_RECOGNITION = "Sorry, couldn't recognise the given link."
     ERR_QOBUZ_NOT_STREAMABLE = "This track/album is not available to download."
-
+    ERR_QOBUZ_NOT_AVAILABLE = "This track is not available in your region"
 #----------------
 #
 # TRACK & ALBUM POSTS

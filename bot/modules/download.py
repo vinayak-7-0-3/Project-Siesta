@@ -4,8 +4,9 @@ from pyrogram import Client, filters
 from bot import CMD
 from bot.logger import LOGGER
 
+import bot.helpers.translations as lang
+
 from ..helpers.utils import cleanup
-from ..helpers.translations import lang
 from ..helpers.qobuz.handler import start_qobuz
 from ..helpers.message import send_message, antiSpam, check_user, fetch_user_details
 
@@ -21,10 +22,10 @@ async def download_track(c, msg:Message):
                 link = msg.text.split(" ", maxsplit=1)[1]
                 reply = False
         except:
-            return await send_message(msg, lang.ERR_NO_LINK)
+            return await send_message(msg, lang.s.ERR_NO_LINK)
 
         if not link:
-            return await send_message(msg, lang.ERR_LINK_RECOGNITION)
+            return await send_message(msg, lang.s.ERR_LINK_RECOGNITION)
         
         spam = await antiSpam(msg.from_user.id, msg.chat.id)
         if not spam:
@@ -33,7 +34,7 @@ async def download_track(c, msg:Message):
             user['bot_msg'] = await send_message(msg, 'Downloading.......')
             try:
                 await start_link(link, user)
-                await send_message(user, lang.TASK_COMPLETED)
+                await send_message(user, lang.s.TASK_COMPLETED)
             except Exception as e:
                 LOGGER.error(e)
             await c.delete_messages(msg.chat.id, user['bot_msg'].id)

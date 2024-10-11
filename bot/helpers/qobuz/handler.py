@@ -220,10 +220,13 @@ async def start_playlist(tracks, playlist, user):
         await run_concurrent_tasks(tasks, update_details)
     else:
         i = 0
+        upload = False if bot_set.playlist_zip else True
         for track in play_meta['tracks']:
             await progress_message(i, len(play_meta['tracks']), update_details)
-            await start_track(track['itemid'], user, track, False, playlist_folder)
+            await start_track(track['itemid'], user, track, upload, playlist_folder, bot_set.disable_sort_link, True)
             i+=1
+        if not bot_set.playlist_zip:
+            return
 
     if bot_set.playlist_zip:
         await edit_message(user['bot_msg'], lang.ZIPPING)

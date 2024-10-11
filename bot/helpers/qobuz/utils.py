@@ -1,8 +1,8 @@
 # From vitiko98/qobuz-dl
 import re
+import bot.helpers.translations as lang
 
 from .qopy import qobuz_api
-from ..translations import lang
 from ..message import send_message, edit_message
 from ..utils import format_string
 from ..metadata import metadata as base_meta
@@ -22,9 +22,9 @@ async def get_track_metadata(item_id, q_meta=None):
         if "sample" not in raw_meta and raw_meta.get('sampling_rate'):
             q_meta = await qobuz_api.get_track_meta(item_id)
             if not q_meta.get('streamable'):
-                return None, lang.ERR_QOBUZ_NOT_STREAMABLE
+                return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
         else:
-            return None, lang.ERR_QOBUZ_NOT_STREAMABLE
+            return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
     
     metadata = base_meta.copy()
     metadata['itemid'] = item_id
@@ -50,7 +50,7 @@ async def get_track_metadata(item_id, q_meta=None):
 async def get_album_metadata(item_id):
     q_meta = await qobuz_api.get_album_meta(item_id)
     if not q_meta.get('streamable'):
-        return None, lang.ERR_QOBUZ_NOT_STREAMABLE
+        return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
     
     metadata = base_meta.copy()
     metadata['itemid'] = item_id

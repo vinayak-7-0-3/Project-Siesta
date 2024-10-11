@@ -22,6 +22,9 @@ PLAYLIST_SORT - (bool)
 ARTIST_BATCH_UPLOAD - (bool)
 PLAYLIST_CONCURRENT - (bool)
 PLAYLIST_LINK_DISABLE - Disable links for sorted playlist (bool)
+ALBUM_ZIP
+PLAYLIST_ZIP
+ARTIST_ZIP
 
 QOBUZ_QUALITY - (int)
 """

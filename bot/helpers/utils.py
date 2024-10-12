@@ -8,6 +8,7 @@ import bot.helpers.translations as lang
 
 from pathlib import Path
 from urllib.parse import quote
+from pyrogram.errors import MessageNotModified, ReplyMarkupInvalid
 
 from config import Config
 
@@ -230,10 +231,20 @@ async def post_simple_message(user, meta, r_link=None, i_link=None):
         meta, 
         user
     )
-    markup = links_button(r_link, i_link)
+    # incase link option is set to False
+    if bot_set.link_options == 'False':
+        markup=None
+    else:
+        markup = links_button(r_link, i_link)
+
     if meta['type'] == 'album':
         if meta['poster_msg']:
-            await post_art_poster(user, meta, True, markup)
+            try:
+                await post_art_poster(user, meta, True, markup)
+            except MessageNotModified:
+                pass
+            except ReplyMarkupInvalid:
+                pass
     else:
         await send_message(user, caption, markup=markup)
 

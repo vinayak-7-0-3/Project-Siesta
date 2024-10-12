@@ -54,7 +54,7 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
         
     
     update_details = {
-        'text': lang.DOWNLOAD_PROGRESS,
+        'text': lang.s.DOWNLOAD_PROGRESS,
         'func': edit_message,
         'msg': user['bot_msg'],
         'title': album_meta['title'],
@@ -63,12 +63,12 @@ async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
     await run_concurrent_tasks(tasks, update_details)
 
     if bot_set.album_zip:
-        await edit_message(user['bot_msg'], lang.ZIPPING)
+        await edit_message(user['bot_msg'], lang.s.ZIPPING)
         album_meta['folderpath'] = await zip_folder(album_meta['folderpath'])
 
     # Upload
     if upload:
-        await edit_message(user['bot_msg'], lang.UPLOADING)
+        await edit_message(user['bot_msg'], lang.s.UPLOADING)
 
         if bot_set.upload_mode == 'Local':
             await local_upload(album_meta, user)
@@ -118,7 +118,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
     try:
         url = raw_data['url']
     except KeyError:
-        return await send_message(user, lang.ERR_QOBUZ_NOT_AVAILABLE)
+        return await send_message(user, lang.s.ERR_QOBUZ_NOT_AVAILABLE)
         
     track_meta['extension'], track_meta['quality'] = await get_quality(raw_data)
 
@@ -136,7 +136,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
 
     if upload:
         if not disable_msg:
-            await edit_message(user['bot_msg'], lang.UPLOADING)
+            await edit_message(user['bot_msg'], lang.s.UPLOADING)
 
         if bot_set.upload_mode == 'Local':
             await local_upload(track_meta, user)
@@ -172,9 +172,9 @@ async def start_artist(albums, user, artist):
     # now upload artist folder as a whole
     if not upload_album:
         if bot_set.artist_zip:
-            await edit_message(user['bot_msg'], lang.ZIPPING)
+            await edit_message(user['bot_msg'], lang.s.ZIPPING)
             artist_meta['folderpath'] = await zip_folder(artist_meta['folderpath'])
-        await edit_message(user['bot_msg'], lang.UPLOADING)
+        await edit_message(user['bot_msg'], lang.s.UPLOADING)
 
         if bot_set.upload_mode == 'Local':
             await local_upload(artist_meta['folderpath'], user)
@@ -206,7 +206,7 @@ async def start_playlist(tracks, playlist, user):
     _, play_meta['quality'] = await get_quality(track_meta)
 
     update_details = {
-        'text': lang.DOWNLOAD_PROGRESS,
+        'text': lang.s.DOWNLOAD_PROGRESS,
         'func': edit_message,
         'msg': user['bot_msg'],
         'title': play_meta['title'],
@@ -229,11 +229,11 @@ async def start_playlist(tracks, playlist, user):
             return
 
     if bot_set.playlist_zip:
-        await edit_message(user['bot_msg'], lang.ZIPPING)
+        await edit_message(user['bot_msg'], lang.s.ZIPPING)
         play_meta['folderpath'] = await zip_folder(play_meta['folderpath'])
        
 
-    await edit_message(user['bot_msg'], lang.UPLOADING)
+    await edit_message(user['bot_msg'], lang.s.UPLOADING)
 
     if bot_set.upload_mode == 'Local':
             await local_upload(artist_meta['folderpath'], user)

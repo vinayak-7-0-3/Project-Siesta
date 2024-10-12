@@ -13,7 +13,7 @@ from ..helpers.message import edit_message, check_user
 
 @Client.on_callback_query(filters.regex(pattern=r"^providerPanel"))
 async def provider_cb(c, cb:CallbackQuery):
-    if await check_user(message.from_user.id, restricted=True):
+    if await check_user(cb.from_user.id, restricted=True):
         await edit_message(
             cb.message,
             lang.s.PROVIDERS_PANEL,

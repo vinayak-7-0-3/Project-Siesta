@@ -50,7 +50,7 @@ def providers_button():
                 )
             ]
         )
-    inline_keyboard += close_button
+    inline_keyboard += main_button + close_button
     return InlineKeyboardMarkup(inline_keyboard)
 
 

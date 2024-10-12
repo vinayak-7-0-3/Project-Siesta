@@ -112,6 +112,24 @@ class QoClient:
                     raise Exception("QOBUZ : Invalid App Secret. Please recheck your credentials.... Disabling QOBUZ")
                 return await r.json()
 
+
+    async def multi_meta(self, epoint, key, id, type):
+        total = 1
+        offset = 0
+        while total > 0:
+            if type in ["tracks", "albums"]:
+                j = await self.api_call(epoint, id=id, offset=offset, type=type)[type]
+            else:
+                j = await self.api_call(epoint, id=id, offset=offset, type=type)
+            if offset == 0:
+                yield j
+                total = j[key] - 500
+            else:
+                yield j
+                total -= 500
+            offset += 500
+
+
     async def auth(self):
         if Config.QOBUZ_EMAIL:
             usr_info = await self.api_call(
@@ -170,5 +188,34 @@ class QoClient:
         if self.sec is None:
             raise Exception("QOBUZ : Can't find any valid app secret")
 
+
+
+
+
+    async def get_track_url(self, id):
+            fmt_id = self.quality
+            return await self.api_call("track/getFileUrl", id=id, fmt_id=fmt_id)
+
+    async def get_album_meta(self, id):
+        return await self.api_call("album/get", id=id)
+
+    async def get_track_meta(self, id):
+        return await self.api_call("track/get", id=id)
+
+    async def get_artist_meta(self, id):
+        res = []
+        async for data in self.multi_meta("artist/get", "albums_count", id, None):
+            res.append(data)
+        return res
+        #return await self.multi_meta("artist/get", "albums_count", id, None)
+
+    async def get_plist_meta(self, id):
+        res = []
+        async for data in self.multi_meta("playlist/get", "tracks_count", id, None):
+            res.append(data)
+        return res
+
+    async def get_label_meta(self, id):
+        return await self.multi_meta("label/get", "albums_count", id, None)
 
 qobuz_api = QoClient()

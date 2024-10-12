@@ -40,29 +40,24 @@ class Config(object):
     # Just name of the Downloads Folder
     DOWNLOADS_FOLDER = getenv("DOWNLOADS_FOLDER", "DOWNLOADS")
     DOWNLOAD_BASE_DIR = WORK_DIR + DOWNLOADS_FOLDER
+    LOCAL_STORAGE = getenv("LOCAL_STORAGE", DOWNLOAD_BASE_DIR)
 #--------------------
 
 # FILE/FOLDER NAMING
 
 #--------------------
     PLAYLIST_NAME_FORMAT = getenv("PLAYLIST_NAME_FORMAT", "{title} - Playlist")
-    ALBUM_NAME_FORMAT = getenv("ALBUM_PATH_FORMAT", "{album} - {albumartist}")
+    #ALBUM_NAME_FORMAT = getenv("ALBUM_PATH_FORMAT", "{album} - {albumartist}")
     TRACK_NAME_FORMAT = getenv("TRACK_NAME_FORMAT", "{title} - {artist}")
 #--------------------
 
-# RCLONE
+# RCLONE / INDEX
 
 #--------------------
     RCLONE_CONFIG = getenv("RCLONE_CONFIG", None)
+    # No trailing slashes '/' for both index and rclone_dest
     RCLONE_DEST = getenv("RCLONE_DEST", 'remote:newfolder')
-#--------------------
-
-# LOGGING (Error/Info)
-
-#--------------------
-    LOG_CHAT = getenv("LOG_CHAT", "")
-    LOG_ALL_INFO = getenv("LOG_ALL_INFO", "")
-    CLEAR_LOG_FILE = getenv("CLEAR_LOG_FILE", False)
+    INDEX_LINK = getenv('INDEX_LINK', None)
 #--------------------
 
 # QOBUZ
@@ -82,3 +77,9 @@ class Config(object):
     DEEZER_BF_SECRET = getenv("DEEZER_BF_SECRET", None)
     DEEZER_TRACK_URL_KEY = getenv("DEEZER_TRACK_URL_KEY", None)
     DEEZER_ARL = getenv("DEEZER_ARL", None)
+#--------------------
+
+# CONCURRENT
+
+#--------------------
+    MAX_WORKERS = int(getenv("MAX_WORKERS", 5))

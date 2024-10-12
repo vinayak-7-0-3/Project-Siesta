@@ -12,10 +12,21 @@ SETTINGS VARS
 
 AUTH_CHATS - Chats where bot is allowed (str)
 AUTH_USERS - Users who can use bot (str)
-UPLOAD_MODE - rclone/tg (str)
-ANTI_SPAM - OFF/CHAT+/USER (str)
-BOT_PUBLIC - True/False (bool)
+UPLOAD_MODE - RCLONE|Telegram|Local (str)
+ANTI_SPAM - OFF|CHAT+|USER (str)
+BOT_PUBLIC - True|False (bool)
 BOT_LANGUAGE - (str) ISO 639-1 Codes Only
+ART_POSTER - True|False (bool)
+RCLONE_LINK_OPTIONS - False|RCLONE|Index|Both (str)
+PLAYLIST_SORT - (bool)
+ARTIST_BATCH_UPLOAD - (bool)
+PLAYLIST_CONCURRENT - (bool)
+PLAYLIST_LINK_DISABLE - Disable links for sorted playlist (bool)
+ALBUM_ZIP
+PLAYLIST_ZIP
+ARTIST_ZIP
+
+QOBUZ_QUALITY - (int)
 """
 
 class BotSettings(DataBaseHandle):

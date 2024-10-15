@@ -3,12 +3,14 @@ import math
 import aiohttp
 import asyncio
 import shutil
+import zipfile
 
 import bot.helpers.translations as lang
 
 from pathlib import Path
 from urllib.parse import quote
-from pyrogram.errors import MessageNotModified, ReplyMarkupInvalid
+from pyrogram.errors import MessageNotModified
+from concurrent.futures import ThreadPoolExecutor
 
 from config import Config
 
@@ -18,6 +20,7 @@ from .buttons.links import links_button
 from .message import send_message, edit_message
 
 
+MAX_SIZE = 1.9 * 1024 * 1024 * 1024  # 2GB
 # download folder structure : BASE_DOWNLOAD_DIR + message_r_id
 
 async def download_file(url, path):
@@ -78,72 +81,29 @@ async def format_string(text:str, data:dict, user=None):
 
 
 
-async def run_concurrent_tasks(tasks, update=None):
+async def run_concurrent_tasks(tasks, progress_details=None):
     """
     Args:
         tasks: (list) async functions to be run
-        update: whether to show progress updates    
+        progress_details: details for progress message (dict)    
     """
     semaphore = asyncio.Semaphore(Config.MAX_WORKERS)
 
     i = [0]
+    l = len(tasks)
     async def sem_task(task):
         async with semaphore:
             result = await task
-            if update and result:
+            if progress_details and result:
                 i[0]+=1 # currently done
-                await progress_message(i[0], len(tasks), update)
+                await progress_message(i[0], l, progress_details)
 
     await asyncio.gather(*(sem_task(task) for task in tasks))
 
 
-
-async def rclone_upload(user, realpath):
-    """
-    Args:
-        user: user details
-        realpath: full path to (not used for uploading)
-    Returns:
-        rclone_link, index_link
-    """
-    path = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/"
-    cmd = f'rclone copy --config ./rclone.conf "{path}" "{Config.RCLONE_DEST}"'
-    task = await asyncio.create_subprocess_shell(cmd)
-    await task.wait()
-    r_link, i_link = await create_link(realpath, Config.DOWNLOAD_BASE_DIR + f"/{user['r_id']}/")
-    return r_link, i_link
-
-
-async def local_upload(metadata, user):
-    path = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/"
-    to_move = path + metadata['provider']
-    shutil.move(to_move, Config.LOCAL_STORAGE)
-
-
-async def init_telegram_upload(metadata, user):
-    """
-    Set up telegram to upload only a single track at once
-    Args:
-        metadata: full metadata
-        user: user details
-    """
-    if metadata['type'] == 'album' or metadata['type'] == 'playlist':
-        for track in metadata['tracks']:
-            await telegram_upload(track, user)
-    elif metadata['type'] == 'artist':
-        for album in metadata['albums']:
-            for track in album['tracks']:
-                await telegram_upload(track, user)
-
-# simple single track upload
-async def telegram_upload(track, user):
-    thumb = track['filepath'].replace(track['extension'], 'jpg')
-    await download_file(track['thumbnail'], thumb)
-    await send_message(user, track['filepath'], 'audio', thumb=thumb, meta=track)
-
-
 async def create_link(path, basepath):
     """
+    Creates rclone and index link
     Args:
         path: full real path
         basepath: to remove bot folder from real path (DOWNLOADS/r_id/)
@@ -178,22 +138,107 @@ async def create_link(path, basepath):
     return rclone_link, index_link
 
 
-async def zip_folder(folderpath):
+async def zip_handler(folderpath):
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor() as pool:
+        if bot_set.upload_mode == 'Telegram':
+            zips = await loop.run_in_executor(pool, split_zip_folder, folderpath)
+        else:
+            zips = await loop.run_in_executor(pool, zip_folder, folderpath)
+        return zips
+
+
+def split_zip_folder(folderpath) -> list:
     """
     Args:
-        folderpath: to zip
+        folderpath: path to folder to zip
     Returns:
-        path to zip file
+        list of zip file paths
+    """
+    zip_paths = []
+    part_num = 1
+    current_size = 0
+    current_files = []
+
+    def add_to_zip(zip_name, files_to_add):
+        zip_path = f"{zip_name}.part{part_num}.zip"
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for file_path, arcname in files_to_add:
+                zipf.write(file_path, arcname)
+                os.remove(file_path)  # Delete the file after zipping
+        return zip_path
+
+    for root, dirs, files in os.walk(folderpath):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_size = os.path.getsize(file_path)
+            arcname = os.path.relpath(file_path, folderpath)
+
+            # If adding this file would exceed the max size, create a zip for the current files
+            if current_size + file_size > MAX_SIZE:
+                zip_paths.append(add_to_zip(folderpath, current_files))
+                part_num += 1
+                current_files = []  # Reset for the next zip part
+                current_size = 0
+
+            # Add the file to the current group
+            current_files.append((file_path, arcname))
+            current_size += file_size
+
+    # Create the final zip with any remaining files
+    if current_files:
+        zip_paths.append(add_to_zip(folderpath, current_files))
+
+    return zip_paths
+
+
+def zip_folder(folderpath) -> str:
+    """
+    Args:
+        folderpath (str): The path of the folder to zip.
+    Returns:
+        str: The path to the created zip file.
     """
     zip_path = f"{folderpath}.zip"
-    shutil.make_archive(folderpath, 'zip', folderpath)
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(folderpath):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, os.path.relpath(file_path, folderpath))
+                # Remove file after adding to the zip
+                os.remove(file_path)
+    
     return zip_path
 
 
-async def post_art_poster(user:dict, meta:dict, edit=False, markup=None):
+async def move_sorted_playlist(metadata, user) -> str:
+    """
+    Moves the sorted playlist files into a new playlist folder.
+    Used since sorted tracks doest belong to a specific palylist folder
+    Returns:
+        str: path to the newly created playlist folder
+    """
+
+    source_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{metadata['provider']}"
+    destination_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{metadata['provider']}/{metadata['title']}"
+
+    os.makedirs(destination_folder, exist_ok=True)
+
+    # get list of folders inside the source
+    folders = [
+        os.path.join(source_folder, name) for name in os.listdir(source_folder) if os.path.isdir(os.path.join(source_folder, name))
+    ]
+
+    for folder in folders:
+        shutil.move(folder, destination_folder)
+
+    return destination_folder
+
+
+async def post_art_poster(user:dict, meta:dict):
     """
     Args:
-        edit: whether to edit existing post
         markup: buttons if needed
     Returns:
         Message
@@ -205,11 +250,37 @@ async def post_art_poster(user:dict, meta:dict, edit=False, markup=None):
         caption = await format_string(lang.s.PLAYLIST_TEMPLATE, meta, user)
         photo = "./project-siesta.png"
     
-    if edit:
-        return await edit_message(meta['poster_msg'], caption, markup)
     if bot_set.art_poster:
         msg = await send_message(user, photo, 'pic', caption)
         return msg
+
+
+async def create_simple_text(meta, user):
+    caption = await format_string(
+        lang.s.SIMPLE_TITLE.format(
+            meta['title'],
+            meta['type'].title(),
+            meta['provider']
+        ), 
+        meta, 
+        user
+    )
+    return caption
+
+
+async def edit_art_poster(metadata, user, r_link, i_link, caption):
+    """
+    Edits Album/Playlist Art Poster with given information
+    Args:
+        metadata: metadata dict of item
+        caption: text to edit
+    """
+    markup = links_button(r_link, i_link)
+    await edit_message(
+        metadata['poster_msg'],
+        caption,
+        markup
+    )
 
 
 async def post_simple_message(user, meta, r_link=None, i_link=None):
@@ -222,31 +293,9 @@ async def post_simple_message(user, meta, r_link=None, i_link=None):
     Returns:
         Message
     """
-    caption = await format_string(
-        lang.s.SIMPLE_TITLE.format(
-            meta['title'],
-            meta['type'].title(),
-            meta['provider']
-        ), 
-        meta, 
-        user
-    )
-    # incase link option is set to False
-    if bot_set.link_options == 'False':
-        markup=None
-    else:
-        markup = links_button(r_link, i_link)
-
-    if meta['type'] == 'album':
-        if meta['poster_msg']:
-            try:
-                await post_art_poster(user, meta, True, markup)
-            except MessageNotModified:
-                pass
-            except ReplyMarkupInvalid:
-                pass
-    else:
-        await send_message(user, caption, markup=markup)
+    caption = await create_simple_text(meta, user)
+    markup = links_button(r_link, i_link)
+    await send_message(user, caption, markup=markup)
 
 
 async def progress_message(done, total, details):
@@ -254,30 +303,55 @@ async def progress_message(done, total, details):
     Args:
         done: how much task done
         total: total number of tasks
-        details: title, func
+        details: Message, text (dict)
     """
     progress_bar = "{0}{1}".format(
         ''.join(["▰" for i in range(math.floor((done/total) * 10))]),
         ''.join(["▱" for i in range(10 - math.floor((done/total) * 10))])
     )
 
-    try:
-        await details['func'](
-            details['msg'],
-            details['text'].format(
-                progress_bar, 
-                done, 
-                total, 
-                details['title'],
-                details['type'].title()
-            )
+    await edit_message(
+        details['msg'],
+        details['text'].format(
+            progress_bar, 
+            done, 
+            total, 
+            details['title'],
+            details['type'].title()
         )
-    except:pass
+    )
 
 
 
-async def cleanup(user):
-    try:
-        shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/")
-    except Exception as e:
-        LOGGER.info(e)
+async def cleanup(user=None, metadata=None, ):
+    """
+    Clean up after task completed / Clean up after upload
+    if metadata
+        Artist/Album/Playlist files are deleted
+    if user
+        user root folder is removed
+    
+    """
+    if metadata:
+        try:
+            if metadata['type'] == 'album':
+                is_zip = True if bot_set.album_zip else False
+            elif metadata['type'] == 'artist':
+                is_zip = True if bot_set.artist_zip else False
+            else:
+                is_zip = True if bot_set.playlist_zip else False
+            if is_zip:
+                if type(metadata['folderpath']) == list:
+                    for i in metadata['folderpath']:
+                        os.remove(i)
+                else:
+                    os.remove(metadata['folderpath'])
+            else:
+                shutil.rmtree(metadata['folderpath'])
+        except FileNotFoundError:
+            pass
+    if user:
+        try:
+            shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/")
+        except Exception as e:
+            LOGGER.info(e)

@@ -15,14 +15,15 @@ def links_button(rclone, index):
             ]
         )
 
-    if Config.INDEX_LINK:
-        if index:
-            inline_keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        text=lang.s.INDEX_LINK,
-                        url=index
-                    )
-                ]
-            )
+    if index:
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=lang.s.INDEX_LINK,
+                    url=index
+                )
+            ]
+        )
+    if inline_keyboard == []:
+        return None
     return InlineKeyboardMarkup(inline_keyboard)

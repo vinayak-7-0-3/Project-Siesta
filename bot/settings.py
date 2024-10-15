@@ -106,6 +106,7 @@ class BotSettings:
                 login = await deezerapi.login()
                 if login:
                     self.deezer = deezerapi
+                    self.clients.append(deezerapi)
                     LOGGER.info(f"DEEZER : Subscription - {deezerapi.user['OFFER_NAME']}")
                 else:
                     try:

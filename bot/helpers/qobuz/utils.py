@@ -1,5 +1,6 @@
 # From vitiko98/qobuz-dl
 import re
+import copy
 import bot.helpers.translations as lang
 
 from .qopy import qobuz_api
@@ -26,7 +27,7 @@ async def get_track_metadata(item_id, q_meta=None):
         else:
             return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
     
-    metadata = base_meta.copy()
+    metadata = copy.deepcopy(base_meta)
     metadata['itemid'] = item_id
     metadata['copyright'] = q_meta['copyright']
     metadata['albumartist'] = q_meta['album']['artist']['name']
@@ -52,7 +53,7 @@ async def get_album_metadata(item_id):
     if not q_meta.get('streamable'):
         return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
     
-    metadata = base_meta.copy()
+    metadata = copy.deepcopy(base_meta)
     metadata['itemid'] = item_id
     metadata['albumartist'] = q_meta['artist']['name']
     metadata['upc'] = q_meta['upc']
@@ -80,7 +81,7 @@ async def get_track_meta_from_alb(q_meta:dict, alb_meta):
     """
     tracks = []
     for track in q_meta['tracks']['items']:
-        metadata = alb_meta.copy()
+        metadata = copy.deepcopy(alb_meta)
         metadata['itemid'] = track['id']
         metadata['title'] = track['title']
         metadata['duration'] = track['duration']
@@ -98,12 +99,13 @@ async def get_playlist_meta(raw_meta, tracks):
         raw_meta : raw metadata of playlist from qobuz
         tracks : list of tracks (raw metadata)
     """
-    metadata = base_meta.copy()
+    metadata = copy.deepcopy(base_meta)
     metadata['title'] = raw_meta['name']
     metadata['duration'] = raw_meta['duration']
     metadata['totaltracks'] = raw_meta['tracks_count']
     metadata['itemid'] = raw_meta['id']
     metadata['type'] = 'playlist'
+    metadata['provider'] = 'Qobuz'
     
     for track in tracks:
         track_meta, _ = await get_track_metadata(track['id'], track)
@@ -115,7 +117,7 @@ async def get_artist_meta(artist_raw):
     Args:
         artist_raw : raw metadata of artist from qobuz
     """
-    metadata = base_meta.copy()
+    metadata = copy.deepcopy(base_meta)
     metadata['title'] = artist_raw['name']
     metadata['type'] = 'artist'
     metadata['provider'] = 'Qobuz'

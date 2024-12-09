@@ -214,6 +214,9 @@ def smart_discography_filter(
         the same.
         """
         r = re.match(r"([^\(]+)(?:\s*[\(\[][^\)][\)\]])*", album)
+        # when the expression is not matched (when paren/bracket exist before title)
+        if not r:
+            return album.lower()
         return r.group(1).strip().lower()
 
     requested_artist = contents[0]["name"]

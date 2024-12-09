@@ -161,7 +161,11 @@ def split_zip_folder(folderpath) -> list:
     current_files = []
 
     def add_to_zip(zip_name, files_to_add):
-        zip_path = f"{zip_name}.part{part_num}.zip"
+        if part_num == 1:
+            zip_path = f"{zip_name}.zip"
+        else:
+            zip_path = f"{zip_name}.part{part_num}.zip"
+
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for file_path, arcname in files_to_add:
                 zipf.write(file_path, arcname)

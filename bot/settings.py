@@ -13,6 +13,13 @@ from .helpers.deezer.dzapi import deezerapi
 from .helpers.translations import lang_available
 
 
+# For simple boolean values
+def get_value(var):
+    value, _ = set_db.get_variable(var)
+    return value if value else False
+
+
+
 class BotSettings:
     def __init__(self):
         self.deezer = False
@@ -29,39 +36,28 @@ class BotSettings:
         self.rclone = False
         self.check_upload_mode()
 
-        spam, _ = set_db.get_variable('ANTI_SPAM') #bool
+        spam, _ = set_db.get_variable('ANTI_SPAM') #string
         self.anti_spam = spam if spam else 'OFF'
 
-        public, _ = set_db.get_variable('BOT_PUBLIC') #bool
-        self.bot_public = True if public else False
+        self.bot_public = get_value('BOT_PUBLIC')
 
         # post photo of album/artist
-        art_poster, _ = set_db.get_variable('ART_POSTER') #bool
-        self.art_poster = True if art_poster else False
+        self.art_poster = get_value('ART_POSTER')
 
-        playlist_sort, _ = set_db.get_variable("PLAYLIST_SORT")
-        self.playlist_sort = playlist_sort if playlist_sort else False
+        self.playlist_sort = get_value('PLAYLIST_SORT')
         # disable returning links for sorted playlist for cleaner chat
-        disable_sort_link, _ = set_db.get_variable("PLAYLIST_LINK_DISABLE")
-        self.disable_sort_link = disable_sort_link if disable_sort_link else False
+        self.disable_sort_link = get_value('PLAYLIST_LINK_DISABLE')
 
         # Multithreaded downloads
-        artist_batch, _ = set_db.get_variable("ARTIST_BATCH_UPLOAD")
-        self.artist_batch = artist_batch if artist_batch else False
-        playlist_conc, _ = set_db.get_variable("PLAYLIST_CONCURRENT")
-        self.playlist_conc = playlist_conc if playlist_conc else False 
+        self.artist_batch = get_value('ARTIST_BATCH_UPLOAD')
+        self.playlist_conc = get_value('PLAYLIST_CONCURRENT')
         
         link_option, _ = set_db.get_variable('RCLONE_LINK_OPTIONS') #str
         self.link_options = link_option if self.rclone and link_option else 'False'
 
-        #TODO
-        #self.album_sep_zip = False #For artists download
-        album_zip,_ = set_db.get_variable('ALBUM_ZIP')
-        self.album_zip = album_zip if album_zip else False
-        playlist_zip,_ = set_db.get_variable('PLAYLIST_ZIP')
-        self.playlist_zip = playlist_zip if playlist_zip else False
-        artist_zip,_ = set_db.get_variable('ARTIST_ZIP')
-        self.artist_zip = artist_zip if artist_zip else False
+        self.album_zip = get_value('ALBUM_ZIP')
+        self.playlist_zip = get_value('PLAYLIST_ZIP')
+        self.artist_zip = get_value('ARTIST_ZIP')
 
         self.clients = []
 
@@ -124,7 +120,6 @@ class BotSettings:
             if item.__language__ == self.bot_lang:
                 lang.s = item
                 break
-
 
 
 bot_set = BotSettings()

@@ -232,3 +232,14 @@ async def auth(client:Client, msg:Message):
                 set_db.set_variable('AUTH_CHATS', str(bot_set.auth_chats))
             else: await send_message(msg, lang.s.USER_EXIST)
         await send_message(msg, lang.s.AUTH_ID)
+
+
+@Client.on_message(filters.command(CMD.LOG))
+async def send_log(client:Client, msg:Message):
+    if await check_user(msg.from_user.id, restricted=True):
+        user = await fetch_user_details(msg)
+        await send_message(
+            user, 
+            './bot/bot_logs.log',
+            'doc'
+        )

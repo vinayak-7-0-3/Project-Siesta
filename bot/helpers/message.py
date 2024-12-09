@@ -1,6 +1,7 @@
 import os
 
 from pyrogram.types import Message
+from pyrogram.errors import MessageNotModified
 
 from bot.tgclient import aio
 from bot.settings import bot_set
@@ -161,8 +162,11 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
 
 
 async def edit_message(msg:Message, text, markup=None):
-    edited = await msg.edit_text(
-        text=text,
-        reply_markup=markup
-    )
-    return edited
+    try:
+        edited = await msg.edit_text(
+            text=text,
+            reply_markup=markup
+        )
+        return edited
+    except MessageNotModified:
+        return None

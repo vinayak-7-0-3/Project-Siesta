@@ -76,7 +76,7 @@ Auth Chats : {4}
 
     SORT_PLAYLIST = 'Sort Playlist : {}'
     DISABLE_SORT_LINK = 'Disable Sort Link : {}'
-    PLAYLIST_CONC_BUT = "Playlist Batch Upload : {}"
+    PLAYLIST_CONC_BUT = "Playlist Batch Download : {}"
     PLAYLIST_ZIP = 'Zip Playlist : {}'
 
     ARTIST_BATCH_BUT = 'Artist Batch Upload : {}'
@@ -124,4 +124,10 @@ Auth Chats : {4}
 Name : {0}
 Type : {1}
 Provider : {2}
+"""
+
+ARTIST_TEMPLATE = """
+👤 <b>Artist :</b> {artist}
+💫 <b>Quality :</b> {quality}
+📡 <b>Provider :</b> {provider}
 """

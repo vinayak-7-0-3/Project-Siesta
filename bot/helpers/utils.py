@@ -9,6 +9,7 @@ import bot.helpers.translations as lang
 
 from pathlib import Path
 from urllib.parse import quote
+from aiohttp import ClientTimeout
 from pyrogram.errors import MessageNotModified
 from concurrent.futures import ThreadPoolExecutor
 
@@ -23,27 +24,40 @@ from .message import send_message, edit_message
 MAX_SIZE = 1.9 * 1024 * 1024 * 1024  # 2GB
 # download folder structure : BASE_DOWNLOAD_DIR + message_r_id
 
-async def download_file(url, path):
+async def download_file(url, path, retries=3, timeout=30):
     """
     Args:
-        url : to download
-        path : including filename with extention
+        url (str): URL to download.
+        path (str): Path including filename with extension.
+        retries (int): Number of retries in case of failure.
+        timeout (int): Timeout duration for the request in seconds.
     Returns:
-        Error if any else None
+        str or None: Error message if any, else None.
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
-                with open(path, 'wb') as f:
-                    while True:
-                        chunk = await response.content.read(1024)
-                        if not chunk:
-                            break
-                        f.write(chunk)
-                return None
-            else:
-                return "HTTP Status: {response.status}"
+    
+    for attempt in range(1, retries + 1):
+        try:
+            async with aiohttp.ClientSession(timeout=ClientTimeout(total=timeout)) as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        with open(path, 'wb') as f:
+                            while True:
+                                chunk = await response.content.read(1024 * 4)
+                                if not chunk:
+                                    break
+                                f.write(chunk)
+                        return None
+                    else:
+                        return f"HTTP Status: {response.status}"
+        except aiohttp.ClientError as e:
+            if attempt == retries:
+                return f"Connection failed after {retries} attempts: {str(e)}"
+            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+        except asyncio.TimeoutError:
+            if attempt == retries:
+                return "Download failed due to timeout."
+            await asyncio.sleep(2 ** attempt)
 
 
 

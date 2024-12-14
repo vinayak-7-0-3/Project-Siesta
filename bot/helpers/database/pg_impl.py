@@ -27,6 +27,8 @@ PLAYLIST_ZIP
 ARTIST_ZIP
 
 QOBUZ_QUALITY - (int)
+
+TIDAL_AUTH_DATA - (blob) Tidal session saved
 """
 
 class BotSettings(DataBaseHandle):

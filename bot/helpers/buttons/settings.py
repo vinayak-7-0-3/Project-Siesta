@@ -50,6 +50,15 @@ def providers_button():
                 )
             ]
         )
+    if bot_set.can_enable_tidal:
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=lang.s.TIDAL,
+                    callback_data='tdP'
+                )
+            ]
+        )
     inline_keyboard += main_button + close_button
     return InlineKeyboardMarkup(inline_keyboard)
 
@@ -162,6 +171,58 @@ def language_buttons(languages, selected):
     return InlineKeyboardMarkup(inline_keyboard)
 
 
+# tidal panel
+def tidal_buttons():
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(
+                text=lang.s.AUTHORIZATION,
+                callback_data='tdAuth'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=lang.s.QUALITY,
+                callback_data='tdQ'
+            )
+        ]
+    ]
+
+    inline_keyboard += main_button + close_button
+    return InlineKeyboardMarkup(inline_keyboard)
+
+def tidal_auth_buttons():
+    inline_keyboard = []
+    if bot_set.tidal:
+        inline_keyboard += [
+            [
+                InlineKeyboardButton(
+                    text=lang.s.TIDAL_REMOVE_LOGIN,
+                    callback_data=f'tdRemove'
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=lang.s.TIDAL_REFRESH_SESSION,
+                    callback_data=f'tdFresh'
+                )
+            ]
+        ]
+    elif bot_set.can_enable_tidal:
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=lang.s.TIDAL_LOGIN_TV,
+                    callback_data=f'tdLogin'
+                )
+            ]
+        )
+    inline_keyboard += main_button + close_button
+    return InlineKeyboardMarkup(inline_keyboard)
+    
+
+
+# qobuz qualities
 def qb_button(qualities:dict):
     inline_keyboard = []
     for quality in qualities.values():

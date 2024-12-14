@@ -25,6 +25,7 @@ class Bot(Client):
         await super().start()
         await bot_set.login_qobuz()
         await bot_set.login_deezer()
+        await bot_set.login_tidal()
         LOGGER.info("BOT : Started Successfully")
 
     async def stop(self, *args):

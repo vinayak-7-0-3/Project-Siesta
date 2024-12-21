@@ -39,7 +39,7 @@ class BotSettings:
     def __init__(self):
         self.deezer = False
         self.qobuz = False
-        self.tidal = False
+        self.tidal = None
         self.admins = Config.ADMINS
 
         self.set_language()
@@ -77,6 +77,7 @@ class BotSettings:
 
         self.clients = []
 
+
     def check_upload_mode(self):
         if os.path.exists('rclone.conf'):
             self.rclone = True
@@ -112,6 +113,7 @@ class BotSettings:
             except Exception as e:
                 LOGGER.error(e)
     
+
     async def login_deezer(self):
         if Config.DEEZER_ARL or Config.DEEZER_EMAIL:
             if Config.DEEZER_BF_SECRET and Config.DEEZER_TRACK_URL_KEY:
@@ -127,6 +129,7 @@ class BotSettings:
             else:
                 LOGGER.error('DEEZER : Check BF_SECRET and TRACK_URL_KEY')
 
+
     async def login_tidal(self):
         # only load the object if needed
         self.can_enable_tidal = Config.ENABLE_TIDAL
@@ -134,29 +137,22 @@ class BotSettings:
             return
 
         _, refresh_token = set_db.get_variable("TIDAL_AUTH_DATA")
-        loaded = False
 
-        enable_mobile = Config.TIDAL_MOBILE
-        # dont force login via email pass on each startup
-        # only login using email when no session found on database
-        if Config.TIDAL_EMAIL or Config.TIDAL_PASS:
-            if refresh_token:
-                pass
-            if enable_mobile:
-                pass 
-        else:
-            # check for any earlier logins
-            if refresh_token:
-                _, txt = set_db.get_variable("TIDAL_AUTH_DATA")
-                data = json.loads(__decrypt_string__(txt))
-                sub = await tidalapi.login_from_saved(data)
-                if sub:
-                    LOGGER.info("TIDAL : Loaded account - " + sub)
-                    loaded = True
+        if refresh_token:
+            data = json.loads(__decrypt_string__(refresh_token))
+            sub = await tidalapi.login_from_saved(data)
+            if sub:
+                LOGGER.info("TIDAL : Loaded account - " + sub)
+                
+                quality, _ = set_db.get_variable('TIDAL_QUALITY')
+                if quality:
+                    tidalapi.quality = quality
+                spatial, _ = set_db.get_variable('TIDAL_SPATIAL')
+                if spatial:
+                    tidalapi.spatial = spatial
+                self.tidal = tidalapi 
+                self.clients.append(tidalapi) 
 
-        if loaded: # no errors while loading
-            self.tidal = tidalapi 
-            self.clients.append(tidalapi) 
 
     async def save_tidal_login(self, session):
         data = {

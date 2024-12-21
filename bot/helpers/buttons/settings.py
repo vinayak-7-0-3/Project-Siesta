@@ -179,14 +179,18 @@ def tidal_buttons():
                 text=lang.s.AUTHORIZATION,
                 callback_data='tdAuth'
             )
-        ],
-        [
-            InlineKeyboardButton(
-                text=lang.s.QUALITY,
-                callback_data='tdQ'
-            )
         ]
     ]
+
+    if bot_set.tidal:
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=lang.s.QUALITY,
+                    callback_data='tdQ'
+                )
+            ]
+        )
 
     inline_keyboard += main_button + close_button
     return InlineKeyboardMarkup(inline_keyboard)
@@ -234,5 +238,28 @@ def qb_button(qualities:dict):
                 )
             ]
         )
+    inline_keyboard += main_button + close_button
+    return InlineKeyboardMarkup(inline_keyboard)
+
+def tidal_quality_button(qualities:dict):
+    inline_keyboard = []
+    for quality in qualities.values():
+        inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=quality,
+                    callback_data=f"tdSQ_{quality.replace('✅', '')}"
+                )
+            ]
+        )
+
+    inline_keyboard.append(
+        [
+            InlineKeyboardButton(
+                    text=F'SPATIAL : {bot_set.tidal.spatial}',
+                    callback_data=f"tdSQ_spatial"
+                )
+        ]
+    )
     inline_keyboard += main_button + close_button
     return InlineKeyboardMarkup(inline_keyboard)

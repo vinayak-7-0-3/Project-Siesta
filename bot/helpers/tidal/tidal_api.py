@@ -22,9 +22,11 @@ class TidalApi:
         self.mobile_hires = None
         self.mobile_atmos = None
 
-        self.saved = [] # just for storing opened client session
+        self.quality = 'LOW'
+        self.spatial = 'OFF'
+        
 
-        self.enable_mobile = False
+        self.saved = [] # just for storing opened client session
 
         self.sub_type = None
 
@@ -41,7 +43,6 @@ class TidalApi:
         if Config.TIDAL_TV_TOKEN is None and Config.TIDAL_TV_SECRET is None:
             return False, "No Token/Secret added"
 
-        self.enable_mobile = Config.TIDAL_MOBILE # allow using mobile session even when on tv (for hires flac)
         self.tv_session = TvSession(
             Config.TIDAL_TV_TOKEN,
             Config.TIDAL_TV_SECRET,
@@ -86,8 +87,6 @@ class TidalApi:
             self.session
         )
 
-        self.enable_mobile = Config.TIDAL_MOBILE
-
         self.tv_session.refresh_token = data['refresh_token']
         self.tv_session.country_code = data['country_code']
         self.tv_session.user_id = data['user_id']
@@ -113,7 +112,7 @@ class TidalApi:
     
 
     async def refresh_mobile(self, data=None):
-        if self.enable_mobile:
+        if Config.TIDAL_MOBILE:
             if Config.TIDAL_MOBILE_TOKEN:
                 self.mobile_hires = MobileSession(Config.TIDAL_MOBILE_TOKEN, self.session)
                 self.mobile_hires.country_code = self.tv_session.country_code

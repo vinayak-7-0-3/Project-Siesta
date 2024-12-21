@@ -59,9 +59,49 @@ async def tidal_cb(c, cb:CallbackQuery):
         await edit_message(
             cb.message,
             lang.s.TIDAL_PANEL,
-            tidal_buttons()
+            tidal_buttons() # auth and quality button (quality button only if auth already done)
         )
     
+
+@Client.on_callback_query(filters.regex(pattern=r"^tdQ"))
+async def tidal_quality_cb(c, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        qualities = {
+            'LOW': 'LOW',
+            'HIGH': 'HIGH',
+            'LOSSLESS': 'LOSSLESS'
+        }
+        if tidalapi.mobile_hires:
+            qualities['HI_RES'] = 'MAX'
+        qualities[tidalapi.quality] += '✅'
+
+        await edit_message(
+            cb.message,
+            lang.s.TIDAL_PANEL,
+            tidal_quality_button(qualities)
+        )
+
+
+@Client.on_callback_query(filters.regex(pattern=r"^tdSQ"))
+async def tidal_set_quality_cb(c, cb:CallbackQuery):
+    if await check_user(cb.from_user.id, restricted=True):
+        to_set = cb.data.split('_')[1]
+  
+        if to_set == 'spatial':
+            options = ['OFF', 'ATMOS AC3 JOC', 'ATMOS AC4', 'Sony 360RA']
+            current = options.index(tidalapi.spatial)
+            nexti = (current + 1) % 4
+            tidalapi.spatial = options[nexti]
+            set_db.set_variable('TIDAL_SPATIAL', options[nexti])
+        else:
+            qualities = {'LOW':'LOW','HIGH':'HIGH','LOSSLESS':'LOSSLESS','HI_RES':'MAX'}
+            to_set = list(filter(lambda x: qualities[x] == to_set, qualities))[0]
+            tidalapi.quality = to_set
+            set_db.set_variable('TIDAL_QUALITY', to_set)
+            
+        await tidal_quality_cb(c, cb)
+
+
 # show login button if not logged in
 # show refresh button in case logged in exist (both tv and mobile)
 @Client.on_callback_query(filters.regex(pattern=r"^tdAuth"))

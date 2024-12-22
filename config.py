@@ -83,8 +83,6 @@ class Config(object):
 
 #--------------------
     ENABLE_TIDAL = getenv("ENABLE_TIDAL", None)
-    TIDAL_EMAIL = getenv("TIDAL_EMAIL", None)
-    TIDAL_PASS = getenv("TIDAL_PASS", None)
     TIDAL_MOBILE = getenv("TIDAL_MOBILE", None) # only use email pass in mobile session
     TIDAL_MOBILE_TOKEN = getenv("TIDAL_MOBILE_TOKEN", None)
     TIDAL_ATMOS_MOBILE_TOKEN = getenv("TIDAL_ATMOS_MOBILE_TOKEN", None)

@@ -8,6 +8,7 @@ import bot.helpers.translations as lang
 
 from ..helpers.utils import cleanup
 from ..helpers.qobuz.handler import start_qobuz
+from ..helpers.tidal.handler import start_tidal
 from ..helpers.message import send_message, antiSpam, check_user, fetch_user_details
 
 
@@ -47,7 +48,7 @@ async def start_link(link:str, user:dict):
     qobuz = ["https://play.qobuz.com", "https://open.qobuz.com", "https://www.qobuz.com"]
     spotify = ["https://open.spotify.com"]
     if link.startswith(tuple(tidal)):
-        return "tidal"
+        await start_tidal(link, user)
     elif link.startswith(tuple(deezer)):
         return "deezer"
     elif link.startswith(tuple(qobuz)):

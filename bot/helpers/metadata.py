@@ -54,6 +54,10 @@ async def set_metadata(audio_path, data:dict):
         await set_flac(data, handle)
     elif ext == 'mp3':
         await set_mp3(data, handle)
+    elif ext == 'm4a': 
+        if handle == {}:
+            return
+        await set_m4a(data, handle)
 
 
 async def set_flac(data, handle):
@@ -93,6 +97,30 @@ async def set_mp3(data, handle):
     await savePic(handle, data)
     handle.save()
     return True
+
+async def set_m4a(data, handle):
+    if handle.tags is None:
+        handle.add_tags()
+    handle.tags['\u00a9nam'] = data['title']
+    handle.tags['\u00a9alb'] = data['album']
+    handle.tags['\u00a9ART'] = data['artist']
+    handle.tags['aART'] = data['albumartist']
+    handle.tags['\u00a9day'] = data['date']
+    handle.tags['\u00a9gen'] = data['genre']
+    handle.tags['\u00a9cpr'] = data['copyright']
+
+    track_number = int(data['tracknumber']) if data['tracknumber'] != '' else 0
+    totaltracks = int(data['totaltracks']) if data['totaltracks'] != '' else 0
+    handle.tags['trkn'] = [(track_number, totaltracks)]
+    volume = int(data['volume']) if data['volume'] != '' else 0
+    totalvolume = int(data['totalvolume']) if data['totalvolume'] != '' else 0
+    handle.tags['disk'] = [(volume, totalvolume)]
+
+
+    await savePic(handle, data)
+    handle.save()
+    return True
+
 
 async def savePic(handle, metadata):
     album_art = metadata['cover']

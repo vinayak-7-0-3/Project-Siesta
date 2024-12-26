@@ -14,7 +14,7 @@ TIDAL_CLIENT_VERSION = '2.26.1'
 
 class TidalApi:
     def __init__(self):
-        self.base = 'https://api.tidal.com/v1/'
+        self.TIDAL_API_BASE = 'https://api.tidal.com/v1/'
         
         self.ratelimit = aiolimiter.AsyncLimiter(30, 60)
 
@@ -29,6 +29,73 @@ class TidalApi:
         self.saved = [] # just for storing opened client session
 
         self.sub_type = None
+
+
+
+    async def _get(self, url, params=None, session=None, refresh=False):
+        if params is None:
+            params = {}
+
+        # if no session is given, use the first one (default)
+        if session is None:
+            session = self.saved[0]
+
+        params['countryCode'] = session.country_code
+        if 'limit' not in params:
+            params['limit'] = '9999'
+
+
+        async with self.ratelimit:
+            async with self.session.get(
+                self.TIDAL_API_BASE + url,
+                headers=session.auth_headers(),
+                params=params
+            ) as resp:
+
+                # if the request 401s or 403s, try refreshing the TV/Mobile session in case that helps
+                if not refresh and (resp.status == 401 or resp.status == 403):
+                    await session.refresh()
+                    return await self._get(url, params, session, True)
+
+                resp_json = None
+                try:
+                    resp_json = await resp.json()
+                except:  # some tracks seem to return a JSON with leading whitespace
+                    pass
+                    """try:
+                        #resp_json = json.loads(resp.text.strip())
+                        
+                    except:  # if this doesn't work, the HTTP status probably isn't 200. Are we rate limited?
+                        pass"""
+
+                if not resp_json:
+                    raise Exception(f'TIDAL : Response was not valid JSON. HTTP status {resp.status}. {resp.text}')
+
+                if 'status' in resp_json and resp_json['status'] == 404 and \
+                        'subStatus' in resp_json and resp_json['subStatus'] == 2001:
+                    raise Exception('TIDAL : {}. This might be region-locked.'.format(resp_json['userMessage']))
+
+                if 'status' in resp_json and not resp_json['status'] == 200:
+                    raise Exception('TIDAL : ' + str(resp_json))
+
+                return resp_json
+
+
+
+    async def get_track(self, track_id):
+        return await self._get(f'tracks/{track_id}')
+
+
+    async def get_stream_url(self, track_id, quality, session):
+        return await self._get('tracks/' + str(track_id) + '/playbackinfopostpaywall/v4', {
+            'playbackmode': 'STREAM',
+            'assetpresentation': 'FULL',
+            'audioquality': quality,
+            'prefetch': 'false'
+        },
+        session)
+
+
 
     # call this from bot settings panel only
     async def get_tv_login_url(self):

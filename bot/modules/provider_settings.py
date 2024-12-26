@@ -88,8 +88,19 @@ async def tidal_set_quality_cb(c, cb:CallbackQuery):
         to_set = cb.data.split('_')[1]
   
         if to_set == 'spatial':
-            options = ['OFF', 'ATMOS AC3 JOC', 'ATMOS AC4', 'Sony 360RA']
-            current = options.index(tidalapi.spatial)
+            #options = ['OFF', 'ATMOS AC3 JOC', 'ATMOS AC4', 'Sony 360RA']
+            # assuming atleast tv session is added
+            options = ['OFF', 'ATMOS AC3 JOC']
+            if tidalapi.mobile_atmos:
+                options.append('ATMOS AC4')
+            if tidalapi.mobile_atmos or tidalapi.mobile_hires:
+                options.append('Sony 360RA')
+
+            try:
+                current = options.index(tidalapi.spatial)
+            except:
+                current = 0
+                
             nexti = (current + 1) % 4
             tidalapi.spatial = options[nexti]
             set_db.set_variable('TIDAL_SPATIAL', options[nexti])
@@ -166,6 +177,7 @@ async def tidal_remove_login_cb(c:Client, cb:CallbackQuery):
         tidalapi.mobile_atmos = None
         tidalapi.mobile_hires = None
         tidalapi.sub_type = None
+        tidalapi.saved = []
 
         await tidalapi.session.close()
         bot_set.tidal = None

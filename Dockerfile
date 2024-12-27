@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 WORKDIR /usr/src/app
 
 RUN apt-get update -qq && \
-    apt-get install -qq -y ffmpeg && \
+    apt-get install -qq -y ffmpeg gcc libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Install build dependencies and rclone in a separate stage

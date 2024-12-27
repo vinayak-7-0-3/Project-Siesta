@@ -50,7 +50,7 @@ jobs:
           # Other branch tags
           else
             echo "tags=${{ secrets.DOCKER_USERNAME }}/project-siesta:${{ github.ref_name }},${{ secrets.DOCKER_USERNAME }}/project-siesta:$COMMIT_HASH" >> $GITHUB_ENV
-
+          fi
       - name: Build and push Docker image to Docker Hub
         uses: docker/build-push-action@v5
         with:

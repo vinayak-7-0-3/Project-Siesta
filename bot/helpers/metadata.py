@@ -2,10 +2,8 @@ import os
 
 from mutagen import File
 from config import Config
-from mutagen.mp4 import MP4
 from mutagen import flac, mp4
 from mutagen.mp3 import EasyMP3
-from mutagen.flac import FLAC
 from mutagen.id3 import TALB, TCOP, TDRC, TIT2, TPE1, TRCK, APIC, \
     TCON, TOPE, TSRC, USLT, TPOS, TXXX
 
@@ -45,19 +43,20 @@ metadata = {
     }
 
 
-async def set_metadata(audio_path, data:dict):
-    ext = data['extension']
+async def set_metadata(metadata:dict):
+    audio_path = metadata['filepath']
+
     handle = File(audio_path)
-    if data['duration'] == '':
-        await get_duration(audio_path, data, ext)
-    if ext == 'flac':
-        await set_flac(data, handle)
-    elif ext == 'mp3':
-        await set_mp3(data, handle)
-    elif ext == 'm4a': 
-        if handle == {}:
-            return
-        await set_m4a(data, handle)
+
+    if metadata['duration'] == '':
+        metadata['duration'] = handle.info.length
+
+    if 'audio/x-flac' in handle.mime:
+        await set_flac(metadata, handle)
+    elif 'audio/mpeg' in handle.mime:
+        await set_mp3(metadata, handle)
+    elif 'audio/x-m4a' in handle.mime: 
+        await set_m4a(metadata, handle)
 
 
 async def set_flac(data, handle):
@@ -124,7 +123,6 @@ async def set_m4a(data, handle):
 
 async def savePic(handle, metadata):
     album_art = metadata['cover']
-    ext = metadata['extension']
 
     if not os.path.exists(album_art):
         coverPath = Config.DOWNLOAD_BASE_DIR + f"/albumart/{metadata['provider']}/{metadata['itemid']}.jpg"
@@ -138,30 +136,32 @@ async def savePic(handle, metadata):
         await LOGGER.error(e)
         return
 
-    if ext == 'flac':
+    if 'audio/x-flac' in handle.mime:
         pic = flac.Picture()
         pic.data = data
         pic.mime = u"image/jpeg"
         handle.clear_pictures()
         handle.add_picture(pic)
 
-    if ext == 'mp3':
+    if 'audio/mpeg' in handle.mime:
         handle.tags.add(APIC(encoding=3, data=data))
 
-    if ext == 'mp4' or ext == 'm4a':
+    if 'audio/x-m4a' in handle.mime:
         pic = mp4.MP4Cover(data)
         handle.tags['covr'] = [pic]
 
-    if ext =='ogg':
+    if 'audio/ogg' in handle.mime:
         handle['artwork'] = data
     
     os.remove(album_art)
 
-async def get_duration(path, data, ext):
-    if ext == 'mp3':
-        audio = EasyMP3(path)
-    elif ext == 'm4a':
-        audio = MP4(path)
-    elif ext == 'flac':
-        audio = FLAC(path)
-    data['duration'] = audio.info.length
+
+async def get_audio_extension(path):
+    handle = File(path)
+    
+    if 'audio/x-m4a' in handle.mime:
+        return 'm4a'
+    elif 'audio/x-flac' in handle.mime:
+        return 'flac'
+    else:
+        return 'mp3'

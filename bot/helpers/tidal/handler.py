@@ -8,7 +8,7 @@ from .utils import *
 from .metadata import get_track_metadata
 
 from ..utils import *
-from ..metadata import set_metadata
+from ..metadata import set_metadata, get_audio_extension
 from ..uploder import *
 from ..message import send_message
 
@@ -69,12 +69,11 @@ async def start_track(track_id:int, user:dict, upload=True):
             track_codec = 'AAC' if 'mp4a' in manifest['codecs'] else manifest['codecs'].upper()
             urls = manifest['urls'][0]
 
-        track_meta['extension'] = 'm4a'
-
         filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
         track_meta['folderpath'] = filepath
         filename = await format_string(Config.TRACK_NAME_FORMAT, track_meta, user)
-        filepath += f"/{filename}.{track_meta['extension']}"
+        # not adding file extention now
+        filepath += f"/{filename}"
         filepath = sanitize_filepath(filepath)
         track_meta['filepath'] = filepath
 
@@ -95,7 +94,12 @@ async def start_track(track_id:int, user:dict, upload=True):
             if err:
                 return await send_message(user, err)
 
-        await set_metadata(filepath, track_meta)
+        track_meta['extension'] = await get_audio_extension(filepath)
+        track_meta['filepath'] = track_meta['filepath'] + f".{track_meta['extension']}"
+        # filepath var is not updated so it contains old path before extention update
+        os.rename(filepath, track_meta['filepath'])
+
+        await set_metadata(track_meta)
 
         if upload:
             await track_upload(track_meta, user, False)

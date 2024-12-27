@@ -37,7 +37,11 @@ async def get_track_metadata(item_id, q_meta=None):
     metadata['upc'] = q_meta['album']['upc']
     metadata['album'] = q_meta['album']['title']
     metadata['isrc'] = q_meta['isrc']
+
     metadata['title'] = q_meta['title']
+    if q_meta['version']:
+        metadata['title'] += f' ({q_meta["version"]})'
+
     metadata['duration'] = q_meta['duration']
     metadata['explicit'] = q_meta['parental_warning']
     metadata['tracknumber'] = q_meta['track_number']
@@ -83,7 +87,12 @@ async def get_track_meta_from_alb(q_meta:dict, alb_meta):
     for track in q_meta['tracks']['items']:
         metadata = copy.deepcopy(alb_meta)
         metadata['itemid'] = track['id']
+
         metadata['title'] = track['title']
+        # add track version if exists
+        if track['version']:
+            metadata['title'] += f' ({track["version"]})'
+
         metadata['duration'] = track['duration']
         metadata['isrc'] = track['isrc']
         metadata['tracknumber'] = track['track_number']

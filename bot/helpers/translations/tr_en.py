@@ -35,6 +35,19 @@ class EN(object):
     CORE_PANEL = 'Edit main settings here'
     PROVIDERS_PANEL = 'Configure each platform seperartelty'
 
+    TIDAL_PANEL = "Configure Tidal settings here"
+    TIDAL_AUTH_PANEL = """
+Manage auth of Tidal Account here
+
+<b>Account :</b> <code>{}</code>
+<b>Mobile HiRes :</b> <code>{}</code>
+<b>Mobile Atmos :</b> <code>{}</code>
+<b>TV/Auto : </b> <code>{}</code>
+"""
+    TIDAL_AUTH_URL = "Go to the below link for loggin in\n{}"
+    TIDAL_AUTH_SUCCESSFULL = 'Succesfully logged in Tidal'
+    TIDAL_REMOVED_SESSION = 'Successfully removed all sessions for Tidal'
+
     TELEGRAM_PANEL = """
 <b>Telegram Settings</b>
 
@@ -59,32 +72,35 @@ Auth Chats : {4}
 #----------------
     MAIN_MENU_BUTTON = 'MAIN MENU'
     CLOSE_BUTTON = 'CLOSE'
-
+    PROVIDERS = 'PROVIDERS'
     TELEGRAM = 'Telegram'
     CORE = 'CORE'
-    PROVIDERS = 'PROVIDERS'
-
-    LANGUAGE = 'Language'
     
     QOBUZ = 'Qobuz'
     DEEZER = 'Deezer'
+    TIDAL = 'Tidal'
+
     BOT_PUBLIC = 'Bot Public - {}'
     BOT_LANGUAGE = 'Language'
     ANTI_SPAM = 'Anit Spam - {}'
+    LANGUAGE = 'Language'
+    QUALITY = 'Quality'
+    AUTHORIZATION = "Authorizations"
 
     POST_ART_BUT = "Art Poster : {}"
-
     SORT_PLAYLIST = 'Sort Playlist : {}'
     DISABLE_SORT_LINK = 'Disable Sort Link : {}'
     PLAYLIST_CONC_BUT = "Playlist Batch Download : {}"
     PLAYLIST_ZIP = 'Zip Playlist : {}'
-
     ARTIST_BATCH_BUT = 'Artist Batch Upload : {}'
     ARTIST_ZIP = 'Zip Artist : {}'
-
     ALBUM_ZIP = 'Zip Album : {}'
 
     QOBUZ_QUALITY_PANEL = '<b>Edit Qobuz Quality Here</b>'
+
+    TIDAL_LOGIN_TV = 'Login TV'
+    TIDAL_REMOVE_LOGIN = "Remove Login"
+    TIDAL_REFRESH_SESSION = 'Refresh Auth'
 
     RCLONE_LINK = 'Direct Link'
     INDEX_LINK = 'Index Link'
@@ -97,6 +113,13 @@ Auth Chats : {4}
     ERR_LINK_RECOGNITION = "Sorry, couldn't recognise the given link."
     ERR_QOBUZ_NOT_STREAMABLE = "This track/album is not available to download."
     ERR_QOBUZ_NOT_AVAILABLE = "This track is not available in your region"
+    ERR_LOGIN_TIDAL_TV_FAILED = "Login failed : {}"
+#----------------
+#
+# ERRORS
+#
+#----------------
+    WARNING_NO_TIDAL_TOKEN = 'No TV/Auto token-secret added'
 #----------------
 #
 # TRACK & ALBUM POSTS

@@ -5,8 +5,6 @@ import asyncio
 import shutil
 import zipfile
 
-import bot.helpers.translations as lang
-
 from pathlib import Path
 from urllib.parse import quote
 from aiohttp import ClientTimeout
@@ -14,6 +12,7 @@ from pyrogram.errors import MessageNotModified
 from concurrent.futures import ThreadPoolExecutor
 
 from config import Config
+import bot.helpers.translations as lang
 
 from ..logger import LOGGER
 from ..settings import bot_set
@@ -338,6 +337,7 @@ async def progress_message(done, total, details):
             details['type'].title()
         )
     )
+    # await asyncio.sleep(5)
 
 
 

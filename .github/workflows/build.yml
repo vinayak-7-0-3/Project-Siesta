@@ -1,0 +1,62 @@
+name: Build and Push Docker Image to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+      - "feature/*"
+  pull_request:
+    branches:
+      - main
+      - beta
+      - "feature/*"
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up QEMU for multi-platform builds
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Determine Image Tags
+        id: tags
+        run: |
+          # Shorten the commit hash for tagging
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+
+          # Main branch tags
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "tags=${{ secrets.DOCKER_USERNAME }}/project-siesta:latest,${{ secrets.DOCKER_USERNAME }}/project-siesta:main,${{ secrets.DOCKER_USERNAME }}/project-siesta:$COMMIT_HASH" >> $GITHUB_ENV
+
+          # Beta branch tags
+          elif [ "${{ github.ref_name }}" = "beta" ]; then
+            echo "tags=${{ secrets.DOCKER_USERNAME }}/project-siesta:beta,${{ secrets.DOCKER_USERNAME }}/project-siesta:$COMMIT_HASH" >> $GITHUB_ENV
+
+          # Other branch tags
+          else
+            echo "tags=${{ secrets.DOCKER_USERNAME }}/project-siesta:${{ github.ref_name }},${{ secrets.DOCKER_USERNAME }}/project-siesta:$COMMIT_HASH" >> $GITHUB_ENV
+          fi
+      - name: Build and push Docker image to Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

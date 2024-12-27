@@ -117,7 +117,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
     if err:
         return await send_message(user, err)
     
-    await set_metadata(filepath, track_meta)
+    await set_metadata(track_meta)
 
     if upload:
         await track_upload(track_meta, user, disable_link)

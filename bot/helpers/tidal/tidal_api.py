@@ -86,6 +86,14 @@ class TidalApi:
         return await self._get(f'tracks/{track_id}')
 
 
+    async def get_album(self, album_id):
+        return await self._get('albums/' + str(album_id))
+
+    
+    async def get_album_tracks(self, album_id):
+        return await self._get('albums/' + str(album_id) + '/tracks')
+
+
     async def get_stream_url(self, track_id, quality, session):
         return await self._get('tracks/' + str(track_id) + '/playbackinfopostpaywall/v4', {
             'playbackmode': 'STREAM',

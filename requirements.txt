@@ -10,3 +10,4 @@ pathvalidate
 pycryptodomex
 psutil
 aiolimiter
+aiofiles

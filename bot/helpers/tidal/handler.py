@@ -5,7 +5,7 @@ from pathvalidate import sanitize_filepath
 
 from .tidal_api import tidalapi
 from .utils import *
-from .metadata import get_track_metadata
+from .metadata import get_track_metadata, get_album_metadata
 
 from ..utils import *
 from ..metadata import set_metadata, get_audio_extension
@@ -20,36 +20,28 @@ async def start_tidal(url:str, user:dict):
     item_id, type_ = await parse_url(url)
 
     if type_ == 'track':
-        await start_track(item_id, user)
+        await start_track(item_id, user, None)
     elif type_ == 'artist':
         pass
     elif type_ == 'album':
-        pass
+        await start_album(item_id, user)
     elif type_ == 'playlist':
         pass
     else:
         await send_message(user, "Invalid Tidal URL")
         
 
-async def start_track(track_id:int, user:dict, upload=True):
-    track_data = await tidalapi.get_track(track_id)
-    track_meta = await get_track_metadata(track_id, track_data)
-    media_tags, format = await get_media_tags(track_data)
+async def start_track(track_id:int, user:dict, track_meta:dict | None, \
+    upload=True, basefolder=None, session=None, quality=None, disable_link=False, disable_msg=False):
+    if not track_meta:
+        track_data = await tidalapi.get_track(track_id)
+        track_meta = await get_track_metadata(track_id, track_data)
+        filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
+        # mostly session and quality will not be present
+        session, quality = await get_stream_session(track_data)
+    else:
+        filepath = basefolder
 
-    session = {
-            'flac_hires': tidalapi.mobile_hires,
-            '360ra': tidalapi.mobile_hires if tidalapi.mobile_hires else tidalapi.mobile_atmos,
-            'ac4': tidalapi.mobile_atmos,
-            'ac3': tidalapi.tv_session,
-            None: tidalapi.tv_session,
-    }[format]
-
-    # tv sesion gets atmos always so try mobi1e session if exists
-    if not format and 'DOLBY_ATMOS' in media_tags:
-        if tidalapi.mobile_hires:
-            session = tidalapi.mobile_hires
-
-    quality = tidalapi.quality if format != 'flac_hires' else 'HI_RES_LOSSLESS'
     try:
         stream_data = await tidalapi.get_stream_url(track_id, quality, session)
     except Exception as e:
@@ -60,7 +52,11 @@ async def start_track(track_id:int, user:dict, upload=True):
         LOGGER.error(error)
         stream_data = None
     
+
     if stream_data is not None:
+
+        track_meta['quality'] = await get_quality(stream_data)
+
         if stream_data['manifestMimeType'] == 'application/dash+xml':
             manifest = base64.b64decode(stream_data['manifest'])
             urls, track_codec = parse_mpd(manifest)
@@ -69,7 +65,7 @@ async def start_track(track_id:int, user:dict, upload=True):
             track_codec = 'AAC' if 'mp4a' in manifest['codecs'] else manifest['codecs'].upper()
             urls = manifest['urls'][0]
 
-        filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
+        
         track_meta['folderpath'] = filepath
         filename = await format_string(Config.TRACK_NAME_FORMAT, track_meta, user)
         # not adding file extention now
@@ -105,4 +101,45 @@ async def start_track(track_id:int, user:dict, upload=True):
             await track_upload(track_meta, user, False)
 
         
+
+async def start_album(album_id:int, user:dict, upload=True):
+    album_data = await tidalapi.get_album(album_id)
+    tracks_data = await tidalapi.get_album_tracks(album_id)
     
+    album_meta = await get_album_metadata(album_id, album_data, tracks_data)
+
+    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}"
+    album_folder = sanitize_filepath(album_folder)
+    album_meta['folderpath'] = album_folder
+
+    # get a track to get quality
+    track_id = tracks_data['items'][0]['id']
+    track_data = await tidalapi.get_track(track_id)
+    session, quality = await get_stream_session(track_data)
+    stream_data = await tidalapi.get_stream_url(track_id, quality, session)
+
+    album_meta['quality'] = await get_quality(stream_data)
+
+    album_meta['poster_msg'] = await post_art_poster(user, album_meta)
+
+    # concurrent
+    tasks = []
+    for track in album_meta['tracks']:
+        tasks.append(start_track(track['itemid'], user, track, False, album_folder, session, quality))
+
+    update_details = {
+        'text': lang.s.DOWNLOAD_PROGRESS,
+        'msg': user['bot_msg'],
+        'title': album_meta['title'],
+        'type': album_meta['type']
+    }
+    await run_concurrent_tasks(tasks, update_details)
+
+    if bot_set.album_zip:
+        await edit_message(user['bot_msg'], lang.s.ZIPPING)
+        album_meta['folderpath'] = await zip_handler(album_meta['folderpath'])
+
+    # Upload
+    if upload:
+        await edit_message(user['bot_msg'], lang.s.UPLOADING)
+        await album_upload(album_meta, user)

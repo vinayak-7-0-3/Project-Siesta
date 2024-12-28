@@ -26,7 +26,8 @@ async def parse_url(url):
         (r"/track/(\d+)", "track"),  # Track from listen.tidal.com
         (r"/artist/(\d+)", "artist"),  # Artist from listen.tidal.com
         (r"/playlist/([\w-]+)", "playlist"),  # Playlist with numeric or UUID
-        (r"/album/\d+/track/(\d+)", "track")  # Extract only track ID from album_and_track
+        (r"/album/\d+/track/(\d+)", "track"),  # Extract only track ID from album_and_track
+        (r"/album/(\d+)", "album"),
     ]
     
     for pattern, type_ in patterns:

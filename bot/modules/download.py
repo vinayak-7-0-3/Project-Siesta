@@ -37,6 +37,7 @@ async def download_track(c, msg:Message):
                 await start_link(link, user)
                 await send_message(user, lang.s.TASK_COMPLETED)
             except Exception as e:
+                await send_message(user, e)
                 LOGGER.error(e)
             await c.delete_messages(msg.chat.id, user['bot_msg'].id)
             await cleanup(user) # deletes uploaded files

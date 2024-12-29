@@ -37,7 +37,7 @@ async def start_track(track_id:int, user:dict, track_meta:dict | None, \
         try:
             track_data = await tidalapi.get_track(track_id)
         except Exception as e:
-            return await send_message(user, error)
+            return await send_message(user, e)
 
         track_meta = await get_track_metadata(track_id, track_data)
         filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
@@ -54,7 +54,7 @@ async def start_track(track_id:int, user:dict, track_meta:dict | None, \
         if 'Asset is not ready for playback' in str(e):
             error = f'Track [{track_id}] is not available in your region'
         LOGGER.error(error)
-        stream_data = None
+        return await send_message(user, error)
     
 
     if stream_data is not None:
@@ -107,7 +107,11 @@ async def start_track(track_id:int, user:dict, track_meta:dict | None, \
         
 
 async def start_album(album_id:int, user:dict, upload=True):
-    album_data = await tidalapi.get_album(album_id)
+    try:
+        album_data = await tidalapi.get_album(album_id)
+    except Exception as e:
+        return await send_message(user, e)
+        
     tracks_data = await tidalapi.get_album_tracks(album_id)
     
     album_meta = await get_album_metadata(album_id, album_data, tracks_data)

@@ -5,12 +5,15 @@ from pathvalidate import sanitize_filepath
 
 from .tidal_api import tidalapi
 from .utils import *
-from .metadata import get_track_metadata, get_album_metadata
+from .metadata import *
 
 from ..utils import *
 from ..metadata import set_metadata, get_audio_extension
 from ..uploder import *
 from ..message import send_message
+
+from ...settings import bot_set
+import bot.helpers.translations as lang
 
 from bot.logger import LOGGER
 from config import Config
@@ -22,7 +25,7 @@ async def start_tidal(url:str, user:dict):
     if type_ == 'track':
         await start_track(item_id, user, None)
     elif type_ == 'artist':
-        pass
+        await start_artist(item_id, user)
     elif type_ == 'album':
         await start_album(item_id, user)
     elif type_ == 'playlist':
@@ -104,9 +107,11 @@ async def start_track(track_id:int, user:dict, track_meta:dict | None, \
         if upload:
             await track_upload(track_meta, user, False)
 
+    return True
+
         
 
-async def start_album(album_id:int, user:dict, upload=True):
+async def start_album(album_id:int, user:dict, upload=True, basefolder=None):
     try:
         album_data = await tidalapi.get_album(album_id)
     except Exception as e:
@@ -116,7 +121,11 @@ async def start_album(album_id:int, user:dict, upload=True):
     
     album_meta = await get_album_metadata(album_id, album_data, tracks_data)
 
-    album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}"
+    if basefolder:
+        album_folder = basefolder + f"/{album_meta['title']}"
+    else:
+        album_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{album_meta['provider']}/{album_meta['artist']}/{album_meta['title']}"
+    
     album_folder = sanitize_filepath(album_folder)
     album_meta['folderpath'] = album_folder
 
@@ -128,7 +137,8 @@ async def start_album(album_id:int, user:dict, upload=True):
 
     album_meta['quality'] = await get_quality(stream_data)
 
-    album_meta['poster_msg'] = await post_art_poster(user, album_meta)
+    if upload:
+        album_meta['poster_msg'] = await post_art_poster(user, album_meta)
 
     # concurrent
     tasks = []
@@ -151,3 +161,40 @@ async def start_album(album_id:int, user:dict, upload=True):
     if upload:
         await edit_message(user['bot_msg'], lang.s.UPLOADING)
         await album_upload(album_meta, user)
+
+
+
+async def start_artist(artist_id:int, user:dict):
+    artist_data = await tidalapi.get_artist(artist_id)
+    artist_meta = await get_artist_metadata(artist_data)
+    artist_meta['folderpath'] = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{artist_meta['provider']}/{artist_meta['artist']}"
+    artist_meta['folderpath'] = sanitize_filepath(artist_meta['folderpath'])
+    
+    try:
+        artist_albums = await tidalapi.get_artist_albums(artist_id)
+        artist_eps = await tidalapi.get_artist_albums_ep_singles(artist_id)
+    except Exception as e:
+        return await send_message(user, e)
+
+    albums = await sort_album_from_artist(artist_albums['items'])
+    ep_singles = await sort_album_from_artist(artist_eps['items'])
+    
+    albums.extend(ep_singles)
+
+    upload_album = True
+    if bot_set.artist_batch:
+        # for telegram, batch upload is not needed
+        upload_album = True if bot_set.upload_mode == 'Telegram' else False
+    if bot_set.artist_zip:
+        upload_album = False # final decision
+
+    for album in albums:
+        await start_album(album['id'], user, upload_album, artist_meta['folderpath'])
+
+    if not upload_album:
+        if bot_set.artist_zip:
+            await edit_message(user['bot_msg'], lang.s.ZIPPING)
+            artist_meta['folderpath'] = await zip_handler(artist_meta['folderpath'])
+        
+        await edit_message(user['bot_msg'], lang.s.UPLOADING)
+        await artist_upload(artist_meta, user)

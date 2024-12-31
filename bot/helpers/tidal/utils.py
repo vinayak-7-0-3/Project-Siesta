@@ -157,8 +157,39 @@ async def get_quality(stream_data: dict):
         'HIGH':'HIGH',
         'LOSSLESS':'LOSSLESS',
         'HI_RES':'MAX',
-        'HI_RES_LOSSLESS':'MAX',
-        'DOLBY_ATMOS':'ATMOS - LOSSLESS',
+        'HI_RES_LOSSLESS':'MAX'
     }
 
+    if stream_data['audioMode'] == 'DOLBY_ATMOS':
+        return 'Dolby ATMOS'
     return quality_dict[stream_data['audioQuality']]
+
+
+async def sort_album_from_artist(album_data: dict):
+    albums = []
+
+    for album in album_data:
+        if album['audioModes'] == ['DOLBY_ATMOS'] \
+            and tidalapi.spatial in ['ATMOS AC3 JOC', 'ATMOS AC4']: 
+            albums.append(album)
+        elif album['audioModes'] == ['STEREO'] \
+            and tidalapi.spatial == 'OFF':
+            albums.append(album)
+
+    unique_albums = {}
+
+    # Get unique albums (check by mediaMetadata and choose one with more quality)
+    for album in albums:
+        unique_key = (album['title'], album['version'])
+
+        if unique_key not in unique_albums:
+            unique_albums[unique_key] = album
+        else:
+            existing_metadata = unique_albums[unique_key].get('mediaMetadata', {})
+            new_metadata = album.get('mediaMetadata', {})
+            if len(new_metadata) > len(existing_metadata):  
+                unique_albums[unique_key] = album
+
+    filtered_tracks = list(unique_albums.values())
+
+    return filtered_tracks

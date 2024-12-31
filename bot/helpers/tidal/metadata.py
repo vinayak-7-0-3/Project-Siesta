@@ -75,6 +75,17 @@ async def get_album_metadata(album_id, a_meta, t_meta):
     return metadata
 
 
+async def get_artist_metadata(a_meta:dict):
+    metadata = copy.deepcopy(base_meta)
+    metadata['artist'] = a_meta['name']
+    metadata['title'] = a_meta['name']
+    metadata['cover'] = get_cover_url(a_meta.get('picture'))
+    metadata['thumbnail'] = get_cover_url(a_meta.get('picture'), True)
+    metadata['provider'] = 'Tidal'
+    metadata['type'] = 'artist'
+    return metadata
+
+
 def get_cover_url(cover_id, thumbnail=False):
     if cover_id:
         if thumbnail:

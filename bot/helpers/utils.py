@@ -337,7 +337,9 @@ async def progress_message(done, total, details):
                 total, 
                 details['title'],
                 details['type'].title()
-            )
+            ),
+            None,
+            False
         )
     except FloodWait as e:
         pass # dont update the message if flooded

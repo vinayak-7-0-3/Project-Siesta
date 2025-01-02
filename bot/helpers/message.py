@@ -1,7 +1,7 @@
 import os
 
 from pyrogram.types import Message
-from pyrogram.errors import MessageNotModified
+from pyrogram.errors import MessageNotModified, FloodWait
 
 from bot.tgclient import aio
 from bot.settings import bot_set
@@ -161,7 +161,7 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
     return msg
 
 
-async def edit_message(msg:Message, text, markup=None):
+async def edit_message(msg:Message, text, markup=None, antiflood=True):
     try:
         edited = await msg.edit_text(
             text=text,
@@ -171,3 +171,9 @@ async def edit_message(msg:Message, text, markup=None):
         return edited
     except MessageNotModified:
         return None
+    except FloodWait as e:
+        if antiflood:
+            await asyncio.sleep(e.value)
+            return await edit_message(msg, text, markup, antiflood)
+        else:
+            return None

@@ -1,4 +1,7 @@
 import re
+import os
+import aiofiles
+import asyncio
 
 from shutil import copyfileobj
 from xml.etree import ElementTree
@@ -23,7 +26,8 @@ async def parse_url(url):
         (r"/track/(\d+)", "track"),  # Track from listen.tidal.com
         (r"/artist/(\d+)", "artist"),  # Artist from listen.tidal.com
         (r"/playlist/([\w-]+)", "playlist"),  # Playlist with numeric or UUID
-        (r"/album/\d+/track/(\d+)", "track")  # Extract only track ID from album_and_track
+        (r"/album/\d+/track/(\d+)", "track"),  # Extract only track ID from album_and_track
+        (r"/album/(\d+)", "album"),
     ]
     
     for pattern, type_ in patterns:
@@ -35,33 +39,45 @@ async def parse_url(url):
     return None, None
 
 
-async def get_media_tags(json_resp: dict):
+async def get_stream_session(track_data: dict):
     """
-    Get media tags and format from Tidal response
+    Session needed for the quality chosen
     Args:
-        json_resp (dict): Tidal response.
+        track_data: raw data for the track
     Returns:
-        list: Media tags.
-        format: str
+        session: TidalSession
+        quality: LOW | HIGH | LOSSLESS | HI_RES | HI_RES_LOSSLESS
     """
-    media_tags = json_resp['mediaMetadata']['tags']
+    media_tags = track_data['mediaMetadata']['tags']
 
     format = None
 
-    if tidalapi.spatial == 'Sony 360RA':
-        if 'SONY_360RA' in media_tags:
-            format = '360ra'
-    elif tidalapi.spatial == 'ATMOS AC3 JOC':
-        if 'DOLBY_ATMOS' in media_tags:
-            format = 'ac3'
-    elif tidalapi.spatial == 'ATMOS AC4':
-        if 'DOLBY_ATMOS' in media_tags:
-            format = 'ac4'
+    if 'SONY_360RA' in media_tags and tidalapi.spatial == 'Sony 360RA':
+        format = '360ra'
+    elif 'DOLBY_ATMOS' in media_tags and tidalapi.spatial == 'ATMOS AC3 JOC':
+        format = 'ac3'
+    elif 'DOLBY_ATMOS' in media_tags and tidalapi.spatial == 'ATMOS AC4':
+        format = 'ac4'
     # let spatial audio have priority
-    elif 'HIRES_LOSSLESS' in media_tags and not format and tidalapi.quality == 'HI_RES':
+    elif 'HIRES_LOSSLESS' in media_tags and tidalapi.quality == 'HI_RES':
         format = 'flac_hires'
 
-    return media_tags, format
+    session = {
+            'flac_hires': tidalapi.mobile_hires,
+            '360ra': tidalapi.mobile_hires if tidalapi.mobile_hires else tidalapi.mobile_atmos,
+            'ac4': tidalapi.mobile_atmos,
+            'ac3': tidalapi.tv_session,
+            None: tidalapi.tv_session,
+    }[format]
+
+    # tv sesion gets atmos always so try mobi1e session if exists
+    if not format and 'DOLBY_ATMOS' in media_tags:
+        if tidalapi.mobile_hires:
+            session = tidalapi.mobile_hires
+
+    quality = tidalapi.quality if format != 'flac_hires' else 'HI_RES_LOSSLESS'
+    
+    return session, quality
     
 
 
@@ -121,8 +137,59 @@ def parse_mpd(xml: bytes) -> list:
     return tracks, codec
 
 
-async def merge_tracks(temp_tracks:list, output_path:str):
-    with open(output_path, 'wb') as dest_file:
+async def merge_tracks(temp_tracks: list, output_path: str):
+    async with aiofiles.open(output_path, 'wb') as dest_file:
         for temp_location in temp_tracks:
-            with open(temp_location, 'rb') as segment_file:
-                copyfileobj(segment_file, dest_file)
+            async with aiofiles.open(temp_location, 'rb') as segment_file:
+                while True:
+                    chunk = await segment_file.read(1024 * 64)  # Read in chunks
+                    if not chunk:
+                        break
+                    await dest_file.write(chunk)
+    
+    # Delete temp files asynchronously
+    delete_tasks = [asyncio.to_thread(os.remove, temp_location) for temp_location in temp_tracks]
+    await asyncio.gather(*delete_tasks)
+
+async def get_quality(stream_data: dict):
+    quality_dict = qualities = {
+        'LOW':'LOW',
+        'HIGH':'HIGH',
+        'LOSSLESS':'LOSSLESS',
+        'HI_RES':'MAX',
+        'HI_RES_LOSSLESS':'MAX'
+    }
+
+    if stream_data['audioMode'] == 'DOLBY_ATMOS':
+        return 'Dolby ATMOS'
+    return quality_dict[stream_data['audioQuality']]
+
+
+async def sort_album_from_artist(album_data: dict):
+    albums = []
+
+    for album in album_data:
+        if album['audioModes'] == ['DOLBY_ATMOS'] \
+            and tidalapi.spatial in ['ATMOS AC3 JOC', 'ATMOS AC4']: 
+            albums.append(album)
+        elif album['audioModes'] == ['STEREO'] \
+            and tidalapi.spatial == 'OFF':
+            albums.append(album)
+
+    unique_albums = {}
+
+    # Get unique albums (check by mediaMetadata and choose one with more quality)
+    for album in albums:
+        unique_key = (album['title'], album['version'])
+
+        if unique_key not in unique_albums:
+            unique_albums[unique_key] = album
+        else:
+            existing_metadata = unique_albums[unique_key].get('mediaMetadata', {})
+            new_metadata = album.get('mediaMetadata', {})
+            if len(new_metadata) > len(existing_metadata):  
+                unique_albums[unique_key] = album
+
+    filtered_tracks = list(unique_albums.values())
+
+    return filtered_tracks

@@ -86,6 +86,25 @@ class TidalApi:
         return await self._get(f'tracks/{track_id}')
 
 
+    async def get_album(self, album_id):
+        return await self._get('albums/' + str(album_id))
+    
+
+    async def get_album_tracks(self, album_id):
+        return await self._get('albums/' + str(album_id) + '/tracks')
+
+
+    async def get_artist(self, artist_id):
+        return await self._get('artists/' + str(artist_id))
+
+    async def get_artist_albums(self, artist_id):
+        return await self._get('artists/' + str(artist_id) + '/albums')
+
+
+    async def get_artist_albums_ep_singles(self, artist_id):
+        return await self._get('artists/' + str(artist_id) + '/albums', params={'filter': 'EPSANDSINGLES'})
+
+
     async def get_stream_url(self, track_id, quality, session):
         return await self._get('tracks/' + str(track_id) + '/playbackinfopostpaywall/v4', {
             'playbackmode': 'STREAM',

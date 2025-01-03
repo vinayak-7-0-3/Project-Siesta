@@ -10,6 +10,7 @@ from urllib.parse import quote
 from aiohttp import ClientTimeout
 from pyrogram.errors import MessageNotModified
 from concurrent.futures import ThreadPoolExecutor
+from pyrogram.errors import FloodWait
 
 from config import Config
 import bot.helpers.translations as lang
@@ -327,18 +328,21 @@ async def progress_message(done, total, details):
         ''.join(["▱" for i in range(10 - math.floor((done/total) * 10))])
     )
 
-    await edit_message(
-        details['msg'],
-        details['text'].format(
-            progress_bar, 
-            done, 
-            total, 
-            details['title'],
-            details['type'].title()
+    try:
+        await edit_message(
+            details['msg'],
+            details['text'].format(
+                progress_bar, 
+                done, 
+                total, 
+                details['title'],
+                details['type'].title()
+            ),
+            None,
+            False
         )
-    )
-    # await asyncio.sleep(5)
-
+    except FloodWait as e:
+        pass # dont update the message if flooded
 
 
 async def cleanup(user=None, metadata=None, ):

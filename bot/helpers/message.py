@@ -1,10 +1,12 @@
 import os
+import asyncio
 
 from pyrogram.types import Message
-from pyrogram.errors import MessageNotModified
+from pyrogram.errors import MessageNotModified, FloodWait
 
 from bot.tgclient import aio
 from bot.settings import bot_set
+from bot.logger import LOGGER
 
 
 current_user = []
@@ -120,48 +122,53 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
         user = await fetch_user_details(user)
     chat_id = chat_id if chat_id else user['chat_id']
 
-    if itype == 'text':
-        msg = await aio.send_message(
-            chat_id=chat_id,
-            text=item,
-            reply_to_message_id=user['r_id'],
-            reply_markup=markup,
-            disable_web_page_preview=True
-        )
-        
-    elif itype == 'doc':
-        msg = await aio.send_document(
-            chat_id=chat_id,
-            document=item,
-            caption=caption,
-            reply_to_message_id=user['r_id']
-        )
+    try:
+        if itype == 'text':
+            msg = await aio.send_message(
+                chat_id=chat_id,
+                text=item,
+                reply_to_message_id=user['r_id'],
+                reply_markup=markup,
+                disable_web_page_preview=True
+            )
+            
+        elif itype == 'doc':
+            msg = await aio.send_document(
+                chat_id=chat_id,
+                document=item,
+                caption=caption,
+                reply_to_message_id=user['r_id']
+            )
 
-    elif itype == 'audio':
-        msg = await aio.send_audio(
-            chat_id=chat_id,
-            audio=item,
-            caption=caption,
-            duration=int(meta['duration']),
-            performer=meta['artist'],
-            title=meta['title'],
-            thumb=thumb,
-            reply_to_message_id=user['r_id']
-        )
-        os.remove(thumb)
+        elif itype == 'audio':
+            msg = await aio.send_audio(
+                chat_id=chat_id,
+                audio=item,
+                caption=caption,
+                duration=int(meta['duration']),
+                performer=meta['artist'],
+                title=meta['title'],
+                thumb=thumb,
+                reply_to_message_id=user['r_id']
+            )
+            os.remove(thumb)
 
-    elif itype == 'pic':
-        msg = await aio.send_photo(
-            chat_id=chat_id,
-            photo=item,
-            caption=caption,
-            reply_to_message_id=user['r_id']
-        )
+        elif itype == 'pic':
+            msg = await aio.send_photo(
+                chat_id=chat_id,
+                photo=item,
+                caption=caption,
+                reply_to_message_id=user['r_id']
+            )
+
+    except FloodWait as e:
+        await asyncio.sleep(e.value)
+        return await send_message(user, item, itype, caption, markup, chat_id, thumb, meta)
 
     return msg
 
 
-async def edit_message(msg:Message, text, markup=None):
+async def edit_message(msg:Message, text, markup=None, antiflood=True):
     try:
         edited = await msg.edit_text(
             text=text,
@@ -171,3 +178,9 @@ async def edit_message(msg:Message, text, markup=None):
         return edited
     except MessageNotModified:
         return None
+    except FloodWait as e:
+        if antiflood:
+            await asyncio.sleep(e.value)
+            return await edit_message(msg, text, markup, antiflood)
+        else:
+            return None

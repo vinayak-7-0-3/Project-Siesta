@@ -7,15 +7,18 @@ from .qopy import qobuz_api
 from ..message import send_message, edit_message
 from ..utils import format_string
 from ..metadata import metadata as base_meta
+from ..metadata import create_cover_file
 
 from bot.settings import bot_set
+from config import Config
 
 
 
-async def get_track_metadata(item_id, q_meta=None):
+async def get_track_metadata(item_id, r_id, q_meta=None):
     """
     Args:
         item_id : track id
+        r_id: reply to message id
         q_meta : raw metadata from qobuz (pre-fetched)
     """
     if q_meta is None:
@@ -28,11 +31,12 @@ async def get_track_metadata(item_id, q_meta=None):
             return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
     
     metadata = copy.deepcopy(base_meta)
+
+    metadata['tempfolder'] += f"{r_id}-temp/"
+
     metadata['itemid'] = item_id
     metadata['copyright'] = q_meta['copyright']
     metadata['albumartist'] = q_meta['album']['artist']['name']
-    metadata['cover'] = q_meta['album']['image']['large']
-    metadata['thumbnail'] = q_meta['album']['image']['thumbnail']
     metadata['artist'] = await get_artists_name(q_meta['album'])
     metadata['upc'] = q_meta['album']['upc']
     metadata['album'] = q_meta['album']['title']
@@ -50,14 +54,20 @@ async def get_track_metadata(item_id, q_meta=None):
     metadata['provider'] = 'Qobuz'
     metadata['type'] = 'track'
 
+    metadata['cover'] = await create_cover_file(q_meta['album']['image']['large'], metadata)
+    metadata['thumbnail'] = await create_cover_file(q_meta['album']['image']['thumbnail'], metadata, True)
+
     return metadata, None  
         
-async def get_album_metadata(item_id):
+async def get_album_metadata(item_id, r_id):
     q_meta = await qobuz_api.get_album_meta(item_id)
     if not q_meta.get('streamable'):
         return None, lang.s.ERR_QOBUZ_NOT_STREAMABLE
     
     metadata = copy.deepcopy(base_meta)
+
+    metadata['tempfolder'] += f"{r_id}-temp/"
+
     metadata['itemid'] = item_id
     metadata['albumartist'] = q_meta['artist']['name']
     metadata['upc'] = q_meta['upc']
@@ -66,15 +76,17 @@ async def get_album_metadata(item_id):
     metadata['artist'] = q_meta['artist']['name']
     metadata['date'] = q_meta['release_date_original']
     metadata['totaltracks'] = q_meta['tracks_count']
-    metadata['cover'] = q_meta['image']['large']
-    metadata['thumbnail'] = q_meta['image']['thumbnail']
     metadata['duration'] = q_meta['duration']
     metadata['copyright'] = q_meta['copyright']
     metadata['genre'] = q_meta['genre']['name']
     metadata['explicit'] = q_meta['parental_warning']
     metadata['provider'] = 'Qobuz'
-    metadata['tracks'] = await get_track_meta_from_alb(q_meta, metadata)
     metadata['type'] = 'album'
+
+    metadata['cover'] = await create_cover_file(q_meta['image']['large'], metadata)
+    metadata['thumbnail'] = await create_cover_file(q_meta['image']['thumbnail'], metadata, True)
+
+    metadata['tracks'] = await get_track_meta_from_alb(q_meta, metadata)
 
     return metadata, None
 
@@ -96,28 +108,34 @@ async def get_track_meta_from_alb(q_meta:dict, alb_meta):
         metadata['duration'] = track['duration']
         metadata['isrc'] = track['isrc']
         metadata['tracknumber'] = track['track_number']
-        metadata['tracks'] = ''
+        metadata['tracks'] = '' # clear it
         metadata['type'] = 'track'
         tracks.append(metadata)
     return tracks
 
 
-async def get_playlist_meta(raw_meta, tracks):
+async def get_playlist_meta(raw_meta, tracks, r_id):
     """
     Args:
         raw_meta : raw metadata of playlist from qobuz
         tracks : list of tracks (raw metadata)
+        r_id: reply to message id
     """
     metadata = copy.deepcopy(base_meta)
+
+    metadata['tempfolder'] += f"{r_id}-temp/"
+
     metadata['title'] = raw_meta['name']
     metadata['duration'] = raw_meta['duration']
     metadata['totaltracks'] = raw_meta['tracks_count']
     metadata['itemid'] = raw_meta['id']
     metadata['type'] = 'playlist'
     metadata['provider'] = 'Qobuz'
+    metadata['cover'] = './project-siesta.png' #cannot get real playlist image
+    metadata['thumbnail'] = './project-siesta.png'
     
     for track in tracks:
-        track_meta, _ = await get_track_metadata(track['id'], track)
+        track_meta, _ = await get_track_metadata(track['id'], r_id, track)
         metadata['tracks'].append(track_meta)
     return metadata
 

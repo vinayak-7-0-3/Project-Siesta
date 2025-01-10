@@ -29,7 +29,7 @@ async def start_qobuz(url:str, user:dict):
 
 
 async def start_album(item_id:int, user:dict, upload=True, basefolder=None):
-    album_meta, err = await get_album_metadata(item_id)
+    album_meta, err = await get_album_metadata(item_id, user['r_id'])
     if err:
         return await send_message(user, err)
     
@@ -88,7 +88,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
     """
     
     if not track_meta:
-        track_meta, err = await get_track_metadata(item_id)
+        track_meta, err = await get_track_metadata(item_id, user['r_id'])
         if err:
             return await send_message(user, err)
         filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
@@ -128,7 +128,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
 
 
 async def start_artist(albums, user, artist):
-    artist_meta = await get_artist_meta(artist[0])
+    artist_meta = await get_artist_meta(artist[0], user['r_id'])
     artist_meta['folderpath'] = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/Qobuz/{artist[0]['name']}"
     artist_meta['folderpath'] = sanitize_filepath(artist_meta['folderpath'])
 
@@ -155,7 +155,7 @@ async def start_artist(albums, user, artist):
 
 
 async def start_playlist(tracks, playlist, user):
-    play_meta = await get_playlist_meta(playlist[0], tracks)
+    play_meta = await get_playlist_meta(playlist[0], tracks, user['r_id'])
     
     playlist_folder = None
 

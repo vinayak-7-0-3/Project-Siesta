@@ -24,6 +24,7 @@ async def track_upload(metadata, user, disable_link=False):
         os.remove(metadata['filepath'])
     except FileNotFoundError:
         pass
+        
 
 
 async def album_upload(metadata, user):
@@ -164,9 +165,7 @@ async def telegram_upload(track, user):
     Args:
         track: track metadata
         """
-    thumb = track['filepath'].replace(track['extension'], 'jpg')
-    await download_file(track['thumbnail'], thumb)
-    await send_message(user, track['filepath'], 'audio', thumb=thumb, meta=track)
+    await send_message(user, track['filepath'], 'audio', meta=track)
 
 
 async def batch_telegram_upload(metadata, user):

@@ -42,7 +42,7 @@ async def start_track(track_id:int, user:dict, track_meta:dict | None, \
         except Exception as e:
             return await send_message(user, e)
 
-        track_meta = await get_track_metadata(track_id, track_data)
+        track_meta = await get_track_metadata(track_id, track_data, user['r_id'])
         filepath = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{track_meta['provider']}/{track_meta['albumartist']}/{track_meta['album']}"
         # mostly session and quality will not be present
         session, quality = await get_stream_session(track_data)
@@ -119,7 +119,7 @@ async def start_album(album_id:int, user:dict, upload=True, basefolder=None):
         
     tracks_data = await tidalapi.get_album_tracks(album_id)
     
-    album_meta = await get_album_metadata(album_id, album_data, tracks_data)
+    album_meta = await get_album_metadata(album_id, album_data, tracks_data, user['r_id'])
 
     if basefolder:
         album_folder = basefolder + f"/{album_meta['title']}"
@@ -166,7 +166,7 @@ async def start_album(album_id:int, user:dict, upload=True, basefolder=None):
 
 async def start_artist(artist_id:int, user:dict):
     artist_data = await tidalapi.get_artist(artist_id)
-    artist_meta = await get_artist_metadata(artist_data)
+    artist_meta = await get_artist_metadata(artist_data, user['r_id'])
     artist_meta['folderpath'] = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{artist_meta['provider']}/{artist_meta['artist']}"
     artist_meta['folderpath'] = sanitize_filepath(artist_meta['folderpath'])
     

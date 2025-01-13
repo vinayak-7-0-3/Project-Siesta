@@ -128,7 +128,7 @@ async def start_track(item_id:int, user:dict, track_meta:dict | None, upload=Tru
 
 
 async def start_artist(albums, user, artist):
-    artist_meta = await get_artist_meta(artist[0], user['r_id'])
+    artist_meta = await get_artist_meta(artist[0])
     artist_meta['folderpath'] = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/Qobuz/{artist[0]['name']}"
     artist_meta['folderpath'] = sanitize_filepath(artist_meta['folderpath'])
 

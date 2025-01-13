@@ -105,10 +105,9 @@ async def get_cover(cover_id, meta:dict, thumbnail=False):
         url = (
             f'https://resources.tidal.com/images/{cover_id.replace("-", "/")}/80x80.jpg'
             if thumbnail
-            else f'https://resources.tidal.com/images/{cover_id.replace("-", "/")}/origin.jpg'
+            else f'https://resources.tidal.com/images/{cover_id.replace("-", "/")}/1280x1280.jpg'
         )
-    if url:
-        return await create_cover_file(url, meta, thumbnail)
+    return await create_cover_file(url, meta, thumbnail)
 
 
 def get_artists_name(meta:dict):

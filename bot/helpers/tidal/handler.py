@@ -98,9 +98,15 @@ async def start_track(track_id:int, user:dict, track_meta:dict | None, \
                 return await send_message(user, err)
 
         track_meta['extension'] = await get_audio_extension(filepath)
-        track_meta['filepath'] = track_meta['filepath'] + f".{track_meta['extension']}"
-        # filepath var is not updated so it contains old path before extention update
-        os.rename(filepath, track_meta['filepath'])
+        
+        if quality == 'HI_RES_LOSSLESS' and Config.TIDAL_CONVERT_M4A:
+            await ffmpeg_convert(filepath)
+            track_meta['filepath'] = track_meta['filepath'] + '.flac'
+            os.remove(filepath)
+        else:
+            track_meta['filepath'] = track_meta['filepath'] + f".{track_meta['extension']}"
+            # local filepath var is not updated so it contains old path before extention update
+            os.rename(filepath, track_meta['filepath'])
 
         await set_metadata(track_meta)
 

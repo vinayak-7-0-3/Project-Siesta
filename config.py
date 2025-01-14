@@ -88,6 +88,7 @@ class Config(object):
     TIDAL_ATMOS_MOBILE_TOKEN = getenv("TIDAL_ATMOS_MOBILE_TOKEN", None)
     TIDAL_TV_TOKEN = getenv("TIDAL_TV_TOKEN", None)
     TIDAL_TV_SECRET = getenv("TIDAL_TV_SECRET", None)
+    TIDAL_CONVERT_M4A = getenv("TIDAL_CONVERT_M4A", False)
 #--------------------
 
 # CONCURRENT

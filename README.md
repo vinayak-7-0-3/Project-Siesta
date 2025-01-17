@@ -96,7 +96,7 @@ sudo docker run -d --env-file .env --name siesta project-siesta
 - `API_HASH` - Your Telegram APP HASH (get it from my.telegram.org) `(str)`
 - `DATABASE_URL` - Postgres database URL (self hosted or any service) `(str)`
 - `BOT_USERNAME` - Your Telegram Bot username (with or without `@`) `(str)`
-- `ADMINS` - List of Admin users for the Bot (seperated by comma) `(str)`
+- `ADMINS` - List of Admin users for the Bot (seperated by space) `(str)`
 
 #### OPTIONAL VARIABLES
 - `DOWNLOAD_BASE_DIR` - Downloads folder for the bot (folder is inside the working directory of bot) `(str)`

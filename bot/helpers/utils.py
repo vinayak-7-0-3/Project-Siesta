@@ -261,12 +261,11 @@ async def post_art_poster(user:dict, meta:dict):
     Returns:
         Message
     """
+    photo = meta['cover']
     if meta['type'] == 'album':
         caption = await format_string(lang.s.ALBUM_TEMPLATE, meta, user)
-        photo = meta['cover']
     else:
         caption = await format_string(lang.s.PLAYLIST_TEMPLATE, meta, user)
-        photo = "./project-siesta.png"
     
     if bot_set.art_poster:
         msg = await send_message(user, photo, 'pic', caption)
@@ -347,7 +346,9 @@ async def progress_message(done, total, details):
 
 async def cleanup(user=None, metadata=None, ):
     """
-    Clean up after task completed / Clean up after upload
+    Clean up after task completed - For concurrent downloads
+    Clean up after upload - For single download
+    
     if metadata
         Artist/Album/Playlist files are deleted
     if user
@@ -375,5 +376,9 @@ async def cleanup(user=None, metadata=None, ):
     if user:
         try:
             shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/")
+        except Exception as e:
+            LOGGER.info(e)
+        try:
+            shutil.rmtree(f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}-temp/")
         except Exception as e:
             LOGGER.info(e)

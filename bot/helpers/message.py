@@ -107,7 +107,7 @@ async def antiSpam(uid=None, cid=None, revoke=False) -> bool:
 
 
 async def send_message(user, item, itype='text', caption=None, markup=None, chat_id=None, \
-        thumb=None, meta=None):
+        meta=None):
     """
     user: user details (dict)
     item: to send
@@ -148,10 +148,9 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
                 duration=int(meta['duration']),
                 performer=meta['artist'],
                 title=meta['title'],
-                thumb=thumb,
+                thumb=meta['thumbnail'],
                 reply_to_message_id=user['r_id']
             )
-            os.remove(thumb)
 
         elif itype == 'pic':
             msg = await aio.send_photo(
@@ -163,7 +162,7 @@ async def send_message(user, item, itype='text', caption=None, markup=None, chat
 
     except FloodWait as e:
         await asyncio.sleep(e.value)
-        return await send_message(user, item, itype, caption, markup, chat_id, thumb, meta)
+        return await send_message(user, item, itype, caption, markup, chat_id, meta)
 
     return msg
 

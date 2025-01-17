@@ -36,6 +36,7 @@ metadata = {
         'provider': '',
         'tracks': [],
         'albums': [],
+        'tempfolder': f'{Config.DOWNLOAD_BASE_DIR}/', # specific folder for each user
         'filepath': '',   # if track, full path to file
         'folderpath': '', # if album/playlist the full path to folder
         'poster_msg': None,  # Pyrogram message of post (if exist)
@@ -124,11 +125,6 @@ async def set_m4a(data, handle):
 async def savePic(handle, metadata):
     album_art = metadata['cover']
 
-    if not os.path.exists(album_art):
-        coverPath = Config.DOWNLOAD_BASE_DIR + f"/albumart/{metadata['provider']}/{metadata['itemid']}.jpg"
-        await download_file(album_art, coverPath)
-        album_art = coverPath
-
     try:
         with open(album_art, "rb") as f:
             data = f.read()
@@ -152,8 +148,7 @@ async def savePic(handle, metadata):
 
     if 'audio/ogg' in handle.mime:
         handle['artwork'] = data
-    
-    os.remove(album_art)
+
 
 
 async def get_audio_extension(path):
@@ -165,3 +160,14 @@ async def get_audio_extension(path):
         return 'flac'
     else:
         return 'mp3'
+
+
+async def create_cover_file(url:dict, meta:dict, thumbnail=False):
+    filename = f"{meta['itemid']}-thumb.jpg" if thumbnail else f"{meta['itemid']}.jpg"
+    cover = meta['tempfolder'] + filename
+    
+    if not os.path.exists(cover):
+        err = await download_file(url, cover, 1, 5)
+        if err:
+            return './project-siesta.png'
+    return cover

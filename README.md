@@ -15,26 +15,29 @@ Note: This is not a music streaming / VC Bot
 
 Feels free to check the repo and report bugs / features
 
+**A complete guide for ~~downloading~~ (coughs..) ehmm.... can be found [here](https://rentry.org/project-siesta)**
+
 ## INSTALLATION
 
-- Clone the repo (download it or git clone)
 
 #### 1) LOCAL DEPLOYMENT
 
 **Requirements**
 - Python>=3.10 (3.12 recommended) 
+- Git installed (optional)
 - Rclone (optional)
+- ffmpeg (optional)
 
-Create virtual environment and run
+**Steps**
+- Git clone (or download) the repo
+- Create virtual environment and run
 ```
 virtualenv -p python3 VENV
 . ./VENV/bin/activate
 ```
-Edit and fill out the essentials environment variables in `sample.env` (refer [here](#variables-info))
-
-Rename `sample.env` to `.env`
-
-Finally run
+- Edit and fill out the essentials environment variables in `sample.env` (refer [here](#variables-info))
+- Rename `sample.env` to `.env`
+- Finally run
 ```
 pip install -r requirements.txt
 python -m bot
@@ -42,46 +45,48 @@ python -m bot
 
 #### 2) USING DOCKER (Manual Build)
 **Requirements**
-- Docker installed
+- Git installed (optional)
+- Of course Docker installed (how would ya do docker method without docker  🤷‍)
 
-Edit and fill out the essentials environment variables in `sample.env` (refer [here](#variables-info))
-
-Rename `sample.env` to `.env`
-
-Make docker image
-
+**Steps**
+- Git clone (or download) the repo
+- Fill out the required variables in `sample.env` (refer [here](#variables-info))
+- Build the image using the Docker build command
 ```
-sudo docker build . -t projectsiesta
+sudo docker build . -t project-siesta
 ```
-
-Run the docker image
-
+- Now run the created Docker image
 ```
-sudo docker run -d --name siesta projectsiesta
+sudo docker run -d --env-file sample.env --name siesta project-siesta
 ```
+- At this point your bot will be running (if everything correct)
 
 #### 3) USING DOCKER (Prebuilt Image)
 
-You can find prebuilt images using github actions at Dockerhub repo - `weebzbots/project-siesta`
+Premade Docker Images are available at Dockerhub repo `weebzbots/project-siesta`
+These images are made using GitHub Actions
+- Supported architectures
+	- `arm64`
+	- `amd64`
+- Build Tags
+	- `latest` - Latest stable releases from main branch
+	- `beta` - Latest beta releases from beta branch (early feature testing)
+	- `<commit-hash>` - You can use specific commit hash for specific versions
 
-Tags: 
-- `latest` - latest built from main brach
-- `beta` - latest beta updates (for testing)
+**Requirements**
+- Of course Docker installed (how would ya do docker method without docker  🤷‍)
 
-You can use commit-hash as tag for specific versions
-
-Pull the docker image using
-
+**Steps**
+- Pull the Docker image
 ```
-sudo docker pull weebzcloud/project-siest
+sudo docker pull weebzcloud/project-siesta
 ```
-Create a `.env` file with essential variables (refer [here](#variables-info))
-
-Run the docker image
-
+- Somewhere in your server, create a `.env` file with required variables (refer [here](#variables-info))
+- Run the image
 ```
-sudo docker run -d --env-file .env --name siesta projectsiesta
+sudo docker run -d --env-file .env --name siesta project-siesta
 ```
+- At this point your bot will be running (if everything correct)
 
 ## VARIABLES INFO
 
@@ -91,7 +96,7 @@ sudo docker run -d --env-file .env --name siesta projectsiesta
 - `API_HASH` - Your Telegram APP HASH (get it from my.telegram.org) `(str)`
 - `DATABASE_URL` - Postgres database URL (self hosted or any service) `(str)`
 - `BOT_USERNAME` - Your Telegram Bot username (with or without `@`) `(str)`
-- `ADMINS` - List of Admin users for the Bot (seperated by comma) `(str)`
+- `ADMINS` - List of Admin users for the Bot (seperated by space) `(str)`
 
 #### OPTIONAL VARIABLES
 - `DOWNLOAD_BASE_DIR` - Downloads folder for the bot (folder is inside the working directory of bot) `(str)`
@@ -112,6 +117,7 @@ sudo docker run -d --env-file .env --name siesta projectsiesta
 - `TIDAL_ATMOS_MOBILE_TOKEN` - Atmos Mobile token for Tidal `(str)`
 - `TIDAL_TV_TOKEN` - TV/Auto Token for Tidal `(str)`
 - `TIDAL_TV_SECRET` - TV/Auto Token for Tidal `(str)`
+- `TIDAL_CONVERT_M4A` - Convert the MAX quality tracks to FLAC `(bool)`
 
 ## CREDITS
 - OrpheusDL - https://github.com/yarrm80s/orpheusdl

@@ -123,3 +123,51 @@ sudo docker run -d --env-file .env --name siesta projectsiesta
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I7FWQZ4)
 
 TON - `UQBBPkWSnbMWXrM6P-pb96wYxQzLjZ2hhuYfsO-N2pVmznCG`
+
+## Deploying to Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+Follow these steps to deploy Project-Siesta to Heroku:
+
+1.  **Create a Heroku app:**
+    If you haven't already, install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) and log in. Then, create a new app:
+    ```bash
+    heroku create your-app-name
+    ```
+    Replace `your-app-name` with a unique name for your application.
+
+2.  **Set Environment Variables:**
+    You need to set the essential configuration variables for the bot to work. Use the `heroku config:set` command for each variable.
+    Example:
+    ```bash
+    heroku config:set TG_BOT_TOKEN="your_actual_bot_token"
+    heroku config:set APP_ID="your_app_id"
+    heroku config:set API_HASH="your_api_hash"
+    heroku config:set DATABASE_URL="your_heroku_postgres_or_external_db_url"
+    heroku config:set BOT_USERNAME="YourBotUsername"
+    heroku config:set ADMINS="admin_user_id1 admin_user_id2"
+    ```
+    *Note: For `ADMINS`, provide a space-separated list of user IDs.*
+    *For `DATABASE_URL`, you can use Heroku Postgres by adding it as an add-on: `heroku addons:create heroku-postgresql:hobby-dev` (or other plan). The `DATABASE_URL` will be automatically set, or you can retrieve it using `heroku config:get DATABASE_URL`.*
+
+3.  **Deploy the code:**
+    Commit your changes to git and push to Heroku. Assuming your Heroku remote is named `heroku` and your default branch is `main`:
+    ```bash
+    git add .
+    git commit -m "Prepare for Heroku deployment"
+    git push heroku main
+    ```
+    If your default branch is `master`, use `git push heroku master`.
+
+4.  **Scale the worker dyno:**
+    By default, Heroku might not run the `worker` process defined in your `Procfile`. You need to scale it:
+    ```bash
+    heroku ps:scale worker=1
+    ```
+
+5.  **Check logs (Optional):**
+    To monitor your bot or troubleshoot issues:
+    ```bash
+    heroku logs --tail
+    ```

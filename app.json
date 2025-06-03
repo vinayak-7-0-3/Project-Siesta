@@ -1,0 +1,83 @@
+{
+  "name": "Project Siesta Bot",
+  "description": "A Telegram bot for downloading music from various sources. Deployed via Project-Siesta.",
+  "logo": "https://raw.githubusercontent.com/vinayak-7-0-3/Project-Siesta/main/project-siesta.png",
+  "keywords": ["telegram", "bot", "music", "downloader", "qobuz", "tidal", "deezer"],
+  "repository": "https://github.com/vinayak-7-0-3/Project-Siesta",
+  "env": {
+    "TG_BOT_TOKEN": {
+      "description": "Your Telegram bot token from @BotFather.",
+      "required": true
+    },
+    "APP_ID": {
+      "description": "Your Telegram API ID from my.telegram.org.",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Your Telegram API hash from my.telegram.org.",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "description": "PostgreSQL database URL (e.g., from Heroku Postgres addon). This will be automatically provisioned by Heroku if you use the addon.",
+      "required": true
+    },
+    "BOT_USERNAME": {
+      "description": "Your bot's username (without @).",
+      "required": true
+    },
+    "ADMINS": {
+      "description": "Space-separated list of Telegram User IDs who are admins of the bot.",
+      "required": true
+    },
+    "WORK_DIR": {
+      "description": "Working directory for the bot. Default is './bot/'.",
+      "value": "./bot/",
+      "required": false
+    },
+    "DOWNLOADS_FOLDER": {
+      "description": "Folder name for downloads within the WORK_DIR. Default is 'DOWNLOADS'.",
+      "value": "DOWNLOADS",
+      "required": false
+    },
+    "MAX_WORKERS": {
+        "description": "Maximum concurrent download workers. Default is 5.",
+        "value": "5",
+        "required": false
+    },
+    "RCLONE_CONFIG": {
+        "description": "Contents of rclone.conf file or URL to it (Optional). Needed for rclone uploads.",
+        "required": false
+    },
+    "RCLONE_DEST": {
+        "description": "Rclone destination path, e.g., 'myremote:backup/music' (Optional).",
+        "required": false
+    },
+    "INDEX_LINK": {
+        "description": "Publicly accessible URL for rclone uploads (Optional).",
+        "required": false
+    },
+    "QOBUZ_EMAIL": {"description": "Qobuz Email (Optional)","required": false},
+    "QOBUZ_PASSWORD": {"description": "Qobuz Password (Optional)","required": false},
+    "DEEZER_ARL": {"description": "Deezer ARL token (Optional)","required": false},
+    "ENABLE_TIDAL": {"description": "Set to 'True' to enable TIDAL module (Optional)","required": false},
+    "TIDAL_MOBILE_TOKEN": {"description": "TIDAL Mobile Token (Optional, if ENABLE_TIDAL is True and using mobile session)","required": false}
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql",
+      "as": "DATABASE"
+    }
+  ],
+  "stack": "container",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}

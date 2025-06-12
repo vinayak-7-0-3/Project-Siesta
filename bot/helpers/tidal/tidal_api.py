@@ -82,6 +82,7 @@ class TidalApi:
 
 
 
+
     async def get_track(self, track_id):
         return await self._get(f'tracks/{track_id}')
 
@@ -192,7 +193,10 @@ class TidalApi:
         if not tv_session:
             self.tv_session = None
 
-        self.sub_type = await self.get_subscription()
+        if self.tv_session.user_id or self.mobile_atmos.user_id or self.mobile_hires.user_id:
+            self.sub_type = await self.get_subscription()
+        else:
+            self.sub_type = 'UNKNOWN'
 
         return self.sub_type
     
@@ -268,6 +272,9 @@ class MobileSession():
         }) as r:
             json_resp = await r.json()
             if r.status == 200:
+                # get user_id in case of direct refresh token login
+                if not self.user_id:
+                    self.user_id = json_resp['user_id']
                 self.access_token = json_resp['access_token']
                 self.expires = datetime.now() + timedelta(seconds=json_resp['expires_in'])
 
@@ -392,6 +399,9 @@ class TvSession():
         }) as r:
             json_resp = await r.json()
             if r.status == 200:
+                # get user_id in case of direct refresh token login
+                if not self.user_id:
+                    self.user_id = json_resp['user_id']
                 self.access_token = json_resp['access_token']
                 self.expires = datetime.now() + timedelta(seconds=json_resp['expires_in'])
 

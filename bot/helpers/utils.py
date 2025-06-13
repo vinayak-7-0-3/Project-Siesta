@@ -58,6 +58,8 @@ async def download_file(url, path, retries=3, timeout=30):
             if attempt == retries:
                 return "Download failed due to timeout."
             await asyncio.sleep(2 ** attempt)
+        except Exception as e:
+            return e
 
 
 

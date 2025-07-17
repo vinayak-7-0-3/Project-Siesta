@@ -9,6 +9,7 @@ import bot.helpers.translations as lang
 from ..helpers.utils import cleanup
 from ..helpers.qobuz.handler import start_qobuz
 from ..helpers.tidal.handler import start_tidal
+from ..helpers.deezer.handler import start_deezer
 from ..helpers.message import send_message, antiSpam, check_user, fetch_user_details
 
 
@@ -44,13 +45,13 @@ async def download_track(c, msg:Message):
 
 async def start_link(link:str, user:dict):
     tidal = ["https://tidal.com", "https://listen.tidal.com", "tidal.com", "listen.tidal.com"]
-    deezer = ["https://deezer.page.link", "https://deezer.com", "deezer.com", "https://www.deezer.com"]
+    deezer = ["https://link.deezer.com", "https://deezer.com", "deezer.com", "https://www.deezer.com", "link.deezer.com"]
     qobuz = ["https://play.qobuz.com", "https://open.qobuz.com", "https://www.qobuz.com"]
     spotify = ["https://open.spotify.com"]
     if link.startswith(tuple(tidal)):
         await start_tidal(link, user)
     elif link.startswith(tuple(deezer)):
-        return "deezer"
+        await start_deezer(link, user)
     elif link.startswith(tuple(qobuz)):
         user['provider'] = 'Qobuz'
         await start_qobuz(link, user)

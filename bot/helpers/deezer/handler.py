@@ -28,7 +28,7 @@ async def start_deezer(url:str, user: dict):
 
 
 async def start_track(item_id: int, user: dict, track_meta: dict | None, upload=True, \
-    filepath=None):
+    filepath=None, disable_link=False):
 
     if not track_meta:
         if int(item_id) < 0: # For user uploaded
@@ -63,7 +63,7 @@ async def start_track(item_id: int, user: dict, track_meta: dict | None, upload=
     await set_metadata(track_meta)
 
     if upload:
-        await track_upload(track_meta, user, False)
+        await track_upload(track_meta, user, disable_link)
 
     return True
 
@@ -127,13 +127,13 @@ async def start_playlist(playlist_id, user):
 
     play_meta = await process_playlist_meta(raw_data, user['r_id'])
 
-    playlist_folder = None
+    playlist_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{play_meta['provider']}/"
 
     # temp variable (telegram upload doesnt need sorting)
     playlist_sort = False if bot_set.upload_mode == 'Telegram' else bot_set.playlist_sort
     
     if not playlist_sort:
-        playlist_folder = f"{Config.DOWNLOAD_BASE_DIR}/{user['r_id']}/{play_meta['provider']}/{play_meta['title']}"
+        playlist_folder += f"{play_meta['title']}"
         playlist_folder = sanitize_filepath(playlist_folder)
     play_meta['folderpath'] = playlist_folder
 
@@ -159,6 +159,17 @@ async def start_playlist(playlist_id, user):
         if bot_set.playlist_zip: upload = False
         for track in play_meta['tracks']:
             await progress_message(i, len(play_meta['tracks']), update_details)
-            await start_track(track['itemid'], user, track, upload, playlist_folder, bot_set.disable_sort_link, True)
+            await start_track(track['itemid'], user, track, upload, playlist_folder, bot_set.disable_sort_link)
             i+=1
+
+    if bot_set.playlist_zip:
+        await edit_message(user['bot_msg'], lang.s.ZIPPING)
+        if playlist_sort:
+            play_meta['folderpath'] = await move_sorted_playlist(play_meta, user)
+        play_meta['folderpath'] = await zip_handler(play_meta['folderpath'])
+
+    # if others not upload
+    if not upload:
+        await edit_message(user['bot_msg'], lang.s.UPLOADING)
+        await playlist_upload(play_meta, user)
 

@@ -112,7 +112,10 @@ async def process_playlist_meta(raw_meta, r_id):
     metadata['thumbnail'] = await get_cover(raw_meta['DATA']['PLAYLIST_PICTURE'], metadata, True)
     
     for track in raw_meta['SONGS']['data']:
-        track_meta = await process_track_metadata(track['SNG_ID'], r_id)
+        try:
+            track_meta = await process_track_metadata(track['SNG_ID'], r_id)
+        except:
+            continue
         metadata['tracks'].append(track_meta)
 
     metadata['quality'] = metadata['tracks'][0]['quality']

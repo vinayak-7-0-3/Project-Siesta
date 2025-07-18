@@ -1,4 +1,5 @@
 import re
+import os
 import aiohttp
 import aiofiles
 import aiolimiter
@@ -241,6 +242,7 @@ class DeezerAPI:
                 buf += data
 
             encrypt_chunk_size = 3 * 2048
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             async with aiofiles.open(path, "wb") as audio:
                 buflen = len(buf)
                 for i in range(0, buflen, encrypt_chunk_size):

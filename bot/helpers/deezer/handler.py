@@ -1,4 +1,3 @@
-import os
 from pathvalidate import sanitize_filepath
 from config import Config
 
@@ -58,8 +57,6 @@ async def start_track(item_id: int, user: dict, track_meta: dict | None, upload=
 
     filepath += f"/{filename}.{track_meta['extension']}"
     track_meta['filepath'] = filepath = sanitize_filepath(filepath)
-
-    os.makedirs(track_meta['folderpath'], exist_ok=True)
 
     await deezerapi.dl_track(item_id, url, track_meta['filepath'])
 

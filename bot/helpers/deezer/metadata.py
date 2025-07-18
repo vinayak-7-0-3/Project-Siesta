@@ -26,7 +26,7 @@ async def process_track_metadata(track_id, r_id, cover=None, \
     metadata['isrc'] = t_meta['ISRC']
 
     metadata['title'] = t_meta['SNG_TITLE']
-    if t_meta['VERSION'] != '':
+    if t_meta.get('VERSION'):
         metadata['title'] += f' ({t_meta["VERSION"]})'
 
     # title might have '/' in it
@@ -63,7 +63,7 @@ async def process_album_metadata(album_id:int, a_meta:dict, t_meta:list, r_id):
     metadata['albumartist'] = a_meta['ART_NAME']
     metadata['upc'] = a_meta['UPC']
     metadata['title'] = a_meta['ALB_TITLE']
-    if a_meta['VERSION']:
+    if a_meta.get('VERSION'):
         metadata['title'] += f' ({a_meta['VERSION']})'
     metadata['album'] = a_meta['ALB_TITLE']
     metadata['artist'] = get_artists_name(a_meta)

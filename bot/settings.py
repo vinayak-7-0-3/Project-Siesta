@@ -131,27 +131,52 @@ class BotSettings:
 
 
     async def login_tidal(self):
-        # only load the object if needed
+        # Check if Tidal is enabled
         self.can_enable_tidal = Config.ENABLE_TIDAL
         if not self.can_enable_tidal:
             return
 
-        _, refresh_token = set_db.get_variable("TIDAL_AUTH_DATA")
+        data = None
+        # Refresh token in env is given preference
+        if Config.TIDAL_REFRESH_TOKEN:
+            data = {
+                'user_id': None, 
+                'refresh_token': Config.TIDAL_REFRESH_TOKEN, 
+                'country_code': Config.TIDAL_COUNTRY_CODE
+            }
+            LOGGER.debug("TIDAL: Using refresh token from environment")
+        else:
+            # Try to get saved authentication data
+            _, saved_info = set_db.get_variable("TIDAL_AUTH_DATA")
+            if saved_info:
+                try:
+                    data = json.loads(__decrypt_string__(saved_info))
+                    LOGGER.debug("TIDAL: Using saved authentication data from Database")
+                except Exception as e:
+                    LOGGER.error(f"TIDAL: Failed to decrypt/parse saved auth data: {e}")
+                    return
 
-        if refresh_token:
-            data = json.loads(__decrypt_string__(refresh_token))
-            sub = await tidalapi.login_from_saved(data)
-            if sub:
-                LOGGER.info("TIDAL : Loaded account - " + sub)
-                
-                quality, _ = set_db.get_variable('TIDAL_QUALITY')
-                if quality:
-                    tidalapi.quality = quality
-                spatial, _ = set_db.get_variable('TIDAL_SPATIAL')
-                if spatial:
-                    tidalapi.spatial = spatial
-                self.tidal = tidalapi 
-                self.clients.append(tidalapi) 
+        if not data:
+            return
+
+        # Attempt login
+        sub = await tidalapi.login_from_saved(data)
+        if sub:
+            LOGGER.info(f"TIDAL: Successfully loaded account - {sub}")
+        
+        # Set audio quality
+        quality, _ = set_db.get_variable('TIDAL_QUALITY')
+        if quality:
+            tidalapi.quality = quality
+        
+        # Set spatial audio
+        spatial, _ = set_db.get_variable('TIDAL_SPATIAL')
+        if spatial:
+            tidalapi.spatial = spatial
+        
+        # Set instance variables
+        self.tidal = tidalapi 
+        self.clients.append(tidalapi)
 
 
     async def save_tidal_login(self, session):

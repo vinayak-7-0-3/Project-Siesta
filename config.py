@@ -89,6 +89,8 @@ class Config(object):
     TIDAL_TV_TOKEN = getenv("TIDAL_TV_TOKEN", None)
     TIDAL_TV_SECRET = getenv("TIDAL_TV_SECRET", None)
     TIDAL_CONVERT_M4A = getenv("TIDAL_CONVERT_M4A", False)
+    TIDAL_REFRESH_TOKEN = getenv("TIDAL_REFRESH_TOKEN", None)
+    TIDAL_COUNTRY_CODE = getenv("TIDAL_COUNTRY_CODE", None) # example CA for Canada
 #--------------------
 
 # CONCURRENT

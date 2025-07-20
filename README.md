@@ -118,6 +118,8 @@ sudo docker run -d --env-file .env --name siesta project-siesta
 - `TIDAL_TV_TOKEN` - TV/Auto Token for Tidal `(str)`
 - `TIDAL_TV_SECRET` - TV/Auto Token for Tidal `(str)`
 - `TIDAL_CONVERT_M4A` - Convert the MAX quality tracks to FLAC `(bool)`
+- `TIDAL_REFRESH_TOKEN` - Refresh token for login (this overrides every other login)
+- `TIDAL_COUNTRY_CODE` - ISO country codes (in uppercase). Only needed when using Refresh Token. 
 
 ## CREDITS
 - OrpheusDL - https://github.com/yarrm80s/orpheusdl

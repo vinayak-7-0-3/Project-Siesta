@@ -116,7 +116,7 @@ class BotSettings:
 
     async def login_deezer(self):
         if Config.DEEZER_ARL or Config.DEEZER_EMAIL:
-            if Config.DEEZER_BF_SECRET and Config.DEEZER_TRACK_URL_KEY:
+            if Config.DEEZER_BF_SECRET:
                 login = await deezerapi.login()
                 if login:
                     self.deezer = deezerapi

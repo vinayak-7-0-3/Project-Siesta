@@ -75,7 +75,7 @@ class Config(object):
     DEEZER_EMAIL = getenv("DEEZER_EMAIL", None)
     DEEZER_PASSWORD = getenv("DEEZER_PASSWORD", None)
     DEEZER_BF_SECRET = getenv("DEEZER_BF_SECRET", None)
-    DEEZER_TRACK_URL_KEY = getenv("DEEZER_TRACK_URL_KEY", None)
+    #DEEZER_TRACK_URL_KEY = getenv("DEEZER_TRACK_URL_KEY", None)
     DEEZER_ARL = getenv("DEEZER_ARL", None)
 #--------------------
 

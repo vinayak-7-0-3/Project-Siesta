@@ -9,6 +9,8 @@ from ..helpers.buttons.settings import *
 from ..helpers.database.pg_impl import set_db
 from ..helpers.message import send_message, edit_message, check_user, fetch_user_details
 
+from config import DEEZER_VARS, TIDAL_VARS, QOBUZ_VARS, Config
+
 
 
 @Client.on_message(filters.command(CMD.SETTINGS))
@@ -243,3 +245,40 @@ async def send_log(client:Client, msg:Message):
             './bot/bot_logs.log',
             'doc'
         )
+
+
+@Client.on_message(filters.command(CMD.SETVAR))
+async def set_var(client: Client, msg: Message):
+    if not await check_user(msg.from_user.id, restricted=True):
+        return
+
+    try:
+        _, var_name, *var_value = msg.text.split(maxsplit=2)
+        var_value = ' '.join(var_value).strip()
+
+        if not var_value:
+            return await msg.reply("Missing value. Usage: `/setvar VAR_NAME value`", quote=True)
+
+        setattr(Config, var_name, var_value)
+        set_db.set_variable(var_name, var_value)
+
+        if var_name in DEEZER_VARS:
+            try:
+                await bot_set.deezer.session.close()
+            except: pass
+            await bot_set.login_deezer()
+        if var_name in TIDAL_VARS:
+            try:
+                await bot_set.tidal.session.close()
+            except: pass
+            await bot_set.login_tidal()
+        if var_name in QOBUZ_VARS:
+            try:
+                await bot_set.qobuz.session.close()
+            except: pass
+            await bot_set.login_qobuz()
+
+        await msg.reply(f"✅ `{var_name}` updated and changes applied.", quote=True)
+
+    except Exception as e:
+        await msg.reply("Missing value. Usage: `/setvar VAR_NAME value`", quote=True)

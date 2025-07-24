@@ -12,6 +12,23 @@ LOGGER = logging.getLogger(__name__)
 if not os.environ.get("ENV"):
     load_dotenv('.env', override=True)
 
+
+
+BASE_DYNAMIC_VARS = {'RCLONE_CONFIG','RCLONE_DEST','INDEX_LINK',}
+
+TIDAL_VARS = {
+    'TIDAL_MOBILE', 'TIDAL_MOBILE_TOKEN', 'TIDAL_ATMOS_MOBILE_TOKEN',
+    'TIDAL_TV_TOKEN', 'TIDAL_TV_SECRET', 'TIDAL_CONVERT_M4A',
+    'TIDAL_REFRESH_TOKEN', 'TIDAL_COUNTRY_CODE',
+}
+
+QOBUZ_VARS = {'QOBUZ_EMAIL', 'QOBUZ_PASSWORD', 'QOBUZ_USER', 'QOBUZ_TOKEN',}
+
+DEEZER_VARS = {'DEEZER_EMAIL', 'DEEZER_PASSWORD', 'DEEZER_BF_SECRET', 'DEEZER_ARL',}
+
+DYNAMIC_VARS = BASE_DYNAMIC_VARS | TIDAL_VARS | QOBUZ_VARS | DEEZER_VARS
+
+
 class Config(object):
 #--------------------
 
@@ -56,7 +73,8 @@ class Config(object):
 #--------------------
     RCLONE_CONFIG = getenv("RCLONE_CONFIG", None)
     # No trailing slashes '/' for both index and rclone_dest
-    RCLONE_DEST = getenv("RCLONE_DEST", 'remote:newfolder')
+    # Example for RCLONE_DEST : remote:yourfolder
+    RCLONE_DEST = getenv("RCLONE_DEST", None)
     INDEX_LINK = getenv('INDEX_LINK', None)
 #--------------------
 

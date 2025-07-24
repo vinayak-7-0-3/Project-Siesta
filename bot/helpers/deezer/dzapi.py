@@ -52,6 +52,13 @@ class DeezerAPI:
         if resp['error']:
             type = list(resp['error'].keys())[0]
             msg = list(resp['error'].values())[0]
+            if type=='VALID_TOKEN_REQUIRED':
+                try:
+                    await self._api_call('deezer.getUserData')
+                    await self._api_call(method, payload)
+                    return
+                except:
+                    pass
             raise APIError(type, msg, resp['payload'])
 
         if method == 'deezer.getUserData':

@@ -6,11 +6,15 @@ on:
       - main
       - beta
       - "feature/*"
+      - "fix/*"
+      - "refactor/*"
   pull_request:
     branches:
       - main
       - beta
       - "feature/*"
+      - "fix/*"
+      - "refactor/*"
   workflow_dispatch:
 
 jobs:

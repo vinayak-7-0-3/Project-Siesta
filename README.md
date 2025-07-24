@@ -118,8 +118,12 @@ sudo docker run -d --env-file .env --name siesta project-siesta
 - `TIDAL_TV_TOKEN` - TV/Auto Token for Tidal `(str)`
 - `TIDAL_TV_SECRET` - TV/Auto Token for Tidal `(str)`
 - `TIDAL_CONVERT_M4A` - Convert the MAX quality tracks to FLAC `(bool)`
-- `TIDAL_REFRESH_TOKEN` - Refresh token for login (this overrides every other login)
+- `TIDAL_REFRESH_TOKEN` - Refresh token for login (this overrides every other Tidal login)
 - `TIDAL_COUNTRY_CODE` - ISO country codes (in uppercase). Only needed when using Refresh Token. 
+- `DEEZER_EMAIL` - Email for Deezer Login
+- `DEEZER_PASSWORD` - Password for the above Deezer Email
+- `DEEZER_BF_SECRET` - BlowFish Secret
+- `DEEZER_EMAIL` - ARL of your Deezer account if not using Email/Pass
 
 ## CREDITS
 - OrpheusDL - https://github.com/yarrm80s/orpheusdl

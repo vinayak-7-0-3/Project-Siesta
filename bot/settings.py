@@ -7,6 +7,7 @@ from bot import LOGGER, Config
 
 from .helpers.translations import set_lang
 from .helpers.database.pg_impl import settings_db
+from bot.utils.string import encrypt_string
 
 from bot.models.uploader import UploaderTypes
 
@@ -86,7 +87,7 @@ class BotSettings:
         }
 
         txt = json.dumps(data)
-        settings_db.set_variable("TIDAL_AUTH_DATA", 0, True, __encrypt_string__(txt))
+        settings_db.set_variable("TIDAL_AUTH_DATA", 0, True, encrypt_string(txt))
 
 
 bot_settings = BotSettings()

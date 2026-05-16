@@ -1,4 +1,5 @@
 import re
+import asyncio
 
 from urllib.parse import urlparse
 
@@ -36,7 +37,7 @@ class DeezerHandler(Provider):
             loop = asyncio.get_running_loop()
         except RuntimeError:
             # No event loop → safe to run
-            return asyncio.run(Deezer.parse_url_async(url))
+            return asyncio.run(DeezerHandler._parse_url_async(url))
         else:
             # Already in async context → caller must await
             raise RuntimeError(
